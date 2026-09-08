@@ -1,0 +1,95 @@
+/* Row Action Popover Styles — Clean, Professional */
+
+.sc-row-popover-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: transparent;
+}
+
+.sc-row-popover-menu {
+  position: fixed;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  padding: 4px;
+  min-width: 160px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: scPopoverFade 0.12s ease-out;
+}
+
+@keyframes scPopoverFade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sc-row-popover-header {
+  padding: 6px 10px 4px 10px;
+}
+
+.sc-row-popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sc-row-popover-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 2px 6px;
+}
+
+.sc-row-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.sc-row-popover-item:hover {
+  background: #f1f5f9;
+}
+
+.sc-row-popover-item:active {
+  background: #e2e8f0;
+}
+
+.sc-row-popover-item.danger {
+  color: #dc2626;
+}
+
+.sc-row-popover-item.danger:hover {
+  background: #fef2f2;
+}
+
+.sc-row-popover-icon {
+  font-size: 14px;
+  font-weight: 700;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.sc-row-popover-item.danger .sc-row-popover-icon {
+  color: #dc2626;
+}

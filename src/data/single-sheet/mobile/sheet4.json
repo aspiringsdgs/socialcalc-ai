@@ -1,0 +1,169 @@
+{
+  "mainSheet": "sheet1",
+  "msc": {
+    "numsheets": 1,
+    "currentid": "sheet1",
+    "currentname": "sheet1",
+    "sheetArr": {
+      "sheet1": {
+        "sheetstr": {
+          "savestr": "version:1.5\ncell:B2:t:INVOICE:l:3:f:12:c:4:cf:1:colspan:4\ncell:C2:t::l:2:f:14\ncell:D2:l:1:f:11:c:2:cf:2\ncell:E2:t::l:2:f:14\ncell:B3:f:8:cf:2\ncell:C3:t::l:2:f:14\ncell:D3:l:1:f:10:cf:2\ncell:E3:l:1:f:15:cf:2:ntvf:3\ncell:B4:t:INVOICE #\\c:f:2\ncell:D4:t:DATE\\c:l:1:f:15:cf:2\ncell:E4:vtf:nd:46061:TODAY():l:1:f:15:cf:2:ntvf:3\ncell:B5:f:3\ncell:C5:cf:2\ncell:D5:l:1:f:10:cf:2\ncell:E5:l:1:f:15:cf:2\ncell:B6:t:BILL TO\\c:f:9:c:4:colspan:2\ncell:D6:f:13:cf:2:tvf:4:colspan:2:rowspan:5\ncell:B7:t:[Name]:f:3:colspan:2\ncell:D7:f:1:cf:2\ncell:B8:t:[Company Name]:f:1:cf:2:colspan:2\ncell:D8:f:1:cf:2\ncell:F8:t:  \ncell:B9:t:[Street Address]:f:1:cf:2:colspan:2\ncell:D9:f:1:cf:2\ncell:B10:t:[City, State,  Zip]:f:1:cf:2:colspan:2\ncell:D10:f:1:cf:2\ncell:B11:t:Phone\\c :f:1:cf:2:colspan:2\ncell:D11:f:1:cf:2\ncell:B12:t:Email\\c:colspan:2\ncell:D12:f:1:cf:2\ncell:B13:f:13:cf:2\ncell:A15:b::2::\ncell:B15:t:DESCRIPTION:b:2:2:2:2:l:1:f:15:c:1:bg:3:cf:1\ncell:C15:t:QTY:b:2:2:2:2:l:1:f:15:c:1:bg:3:cf:1\ncell:D15:t:PRICE:b:2:2:2:2:l:1:f:15:c:1:bg:3:cf:1\ncell:E15:t:AMOUNT:b:2:2:2::l:1:f:15:c:1:bg:3:cf:1\ncell:A16:b::2::\ncell:B16:b:2:2::2:f:4:cf:2\ncell:C16:b::1:::l:2:f:4\ncell:D16:b::4:::l:1:f:4\ncell:E16:vtf:t::IF(C16*D16,C16*D16,\"\"):b::2::2:f:4:ntvf:1\ncell:A17:b::2::\ncell:B17:b::2::2:f:4:cf:2\ncell:C17:b::1:::l:2:f:4\ncell:D17:b::4:::l:1:f:4\ncell:E17:vtf:t::IF(C17*D17,C17*D17,\"\"):b::2::2:f:4:ntvf:1\ncell:A18:b::2::\ncell:B18:b::2::2:f:4:cf:2\ncell:C18:b::1:::l:2:f:4\ncell:D18:b::4:::l:1:f:4\ncell:E18:vtf:t::IF(C18*D18,C18*D18,\"\"):b::2::2:f:4:ntvf:1\ncell:A19:b::2::\ncell:B19:b::2::2:f:4:cf:2\ncell:C19:b::1:::l:2:f:4\ncell:D19:b::4:::l:1:f:4\ncell:E19:vtf:t::IF(C19*D19,C19*D19,\"\"):b::2::2:f:4:ntvf:1\ncell:A20:b::2::\ncell:B20:b::2::2:f:4:cf:2\ncell:C20:b::1:::l:2:f:4\ncell:D20:b::4:::l:1:f:4\ncell:E20:vtf:t::IF(C20*D20,C20*D20,\"\"):b::2::2:f:4:ntvf:1\ncell:A21:b::2::\ncell:B21:b::2::2:f:4:cf:2\ncell:C21:b::1:::l:2:f:4\ncell:D21:b::4:::l:1:f:4\ncell:E21:vtf:t::IF(C21*D21,C21*D21,\"\"):b::2::2:f:4:ntvf:1\ncell:A22:b::2::\ncell:B22:b::2::2:f:4:cf:2\ncell:C22:b::1:::l:2:f:4\ncell:D22:b::4:::l:1:f:4\ncell:E22:vtf:t::IF(C22*D22,C22*D22,\"\"):b::2::2:f:4:ntvf:1\ncell:A23:b::2::\ncell:B23:b::2::2:f:4:cf:2\ncell:C23:b::1:::l:2:f:4\ncell:D23:b::4:::l:1:f:4\ncell:E23:vtf:t::IF(C23*D23,C23*D23,\"\"):b::2::2:f:4:ntvf:1\ncell:A24:b::2::\ncell:B24:b::2::2:f:4:cf:2\ncell:C24:b::1:::l:2:f:4\ncell:D24:b::4:::l:1:f:4\ncell:E24:vtf:t::IF(C24*D24,C24*D24,\"\"):b::2::2:f:4:ntvf:1\ncell:A25:b::2::\ncell:B25:b::2::2:f:4:cf:2\ncell:C25:b::1:::l:2:f:4\ncell:D25:b::4:::l:1:f:4\ncell:E25:vtf:t::IF(C25*D25,C25*D25,\"\"):b::2::2:f:4:ntvf:1\ncell:A26:b::2::\ncell:B26:b::2::2:f:4:cf:2\ncell:C26:b::1:::l:2:f:4\ncell:D26:b::4:::l:1:f:4\ncell:E26:vtf:t::IF(C26*D26,C26*D26,\"\"):b::2::2:f:4:ntvf:1\ncell:A27:b::2::\ncell:B27:b::2::2:f:4:cf:2\ncell:C27:b::1:::l:2:f:4\ncell:D27:b::4:::l:1:f:4\ncell:E27:vtf:t::IF(C27*D27,C27*D27,\"\"):b::2::2:f:4:ntvf:1\ncell:A28:b::2::\ncell:B28:b::2:2:2:f:4:cf:2\ncell:C28:b::1:2::l:1:f:4\ncell:D28:b::4:4::l:1:f:4\ncell:E28:vtf:t::IF(C28*D28,C28*D28,\"\"):b::2::2:f:4:ntvf:1\ncell:B29:b:4::::l:1:f:14\ncell:C29:t:Subtotal\\c:b:4::::l:1:f:14:cf:3:colspan:2\ncell:D29:b:4::::l:1:f:13\ncell:E29:vtf:n:0:SUM(E16\\cE28):b:2::::f:13:ntvf:1\ncell:B30:t:Notes:b:::3::l:1:f:15:cf:2\ncell:C30:t:Tax Rate:l:1:f:14:cf:3:colspan:2\ncell:D30:l:1:f:13\ncell:E30:v:0:f:1:ntvf:2\ncell:B31:b:1::::f:1:cf:2\ncell:C31:t:Tax:l:1:f:14:cf:3:colspan:2\ncell:D31:l:1:f:13\ncell:E31:vtf:n:0:E30*E29:f:1:ntvf:1\ncell:B32:f:1:cf:2\ncell:C32:t:Other:l:2:f:14:cf:3:colspan:2\ncell:D32:b:::2::l:1:f:13\ncell:E32:v:0:b:::2::f:1:ntvf:1\ncell:B33:b:::3::f:1:cf:2\ncell:C33:t:TOTAL:l:2:f:14:cf:3:colspan:2\ncell:D33:b:2::::l:1:f:15\ncell:E33:vtf:n:0:(E29+E31)+E32:b:2::::f:13:ntvf:1\ncell:B34:b:1:::\ncell:B35:t:[From\\c Address line 1, City, State, zip, contact]:l:4:f:5:cf:1:colspan:4:rowspan:2\ncell:B37:t:Thank you for your Business:f:7:c:4:cf:1:colspan:4\ncell:B43:l:1:f:6:cf:1\ncell:C43:t::l:2:f:14\ncell:D43:t::l:2:f:14\ncell:E43:t::l:2:f:14\ncol:A:w:17\ncol:B:w:101\ncol:C:w:41\ncol:D:w:48\ncol:E:w:59\nsheet:c:6:r:43\nborder:1:1px solid rgb(0, 0, 0)\nborder:2:1px solid rgb(0,0,0)\nborder:3:1px solid rgb(153, 153, 153)\nborder:4:thin solid rgb(0,0,0)\ncellformat:1:center\ncellformat:2:left\ncellformat:3:right\ncolor:1:rgb(0, 0, 0)\ncolor:2:rgb(0,0,0)\ncolor:3:rgb(221, 221, 221)\ncolor:4:rgb(51, 51, 51)\nfont:1:* * Trebuchet MS\nfont:2:* 10pt *\nfont:3:* 10pt Trebuchet MS\nfont:4:* 9pt Trebuchet MS\nfont:5:* 9pt arial,helvetica,sans-serif\nfont:6:italic bold 10pt Trebuchet MS\nfont:7:italic bold 9pt *\nfont:8:italic normal * Trebuchet MS\nfont:9:normal bold 10pt *\nfont:10:normal bold 10pt Trebuchet MS\nfont:11:normal bold 14pt Trebuchet MS\nfont:12:normal bold 16pt Trebuchet MS\nfont:13:normal normal * Trebuchet MS\nfont:14:normal normal 10pt Arial\nfont:15:normal normal 10pt Trebuchet MS\nlayout:1:padding:* * * *;vertical-align:bottom;\nlayout:2:padding:* * * *;vertical-align:middle;\nlayout:3:padding:5px * * 5px;vertical-align:bottom;\nlayout:4:padding:7px * * *;vertical-align:*;\nvalueformat:1:#,##0.00\nvalueformat:2:#,##0.00%\nvalueformat:3:m/d/yy\nvalueformat:4:text-html\n"
+        },
+        "name": "sheet1",
+        "hidden": "0"
+      }
+    }
+  },
+  "footers": [
+    {
+      "name": "Invoice 4",
+      "index": 1,
+      "isActive": true
+    }
+  ],
+  "appMapping": {
+    "sheet1": {
+      "BillTo": {
+        "editable": true,
+        "formContent": {
+          "Address": {
+            "cell": "B9",
+            "editable": true,
+            "type": "text"
+          },
+          "CityStateZip": {
+            "cell": "B10",
+            "editable": true,
+            "type": "text"
+          },
+          "CompanyName": {
+            "cell": "B8",
+            "editable": true,
+            "type": "text"
+          },
+          "Email": {
+            "cell": "B12",
+            "editable": true,
+            "type": "text"
+          },
+          "Name": {
+            "cell": "B7",
+            "editable": true,
+            "type": "text"
+          },
+          "Phone": {
+            "cell": "B11",
+            "editable": true,
+            "type": "text"
+          }
+        },
+        "type": "form"
+      },
+      "Date": {
+        "cell": "E4",
+        "editable": true,
+        "type": "text"
+      },
+      "FromAddress": {
+        "cell": "B35",
+        "editable": true,
+        "type": "text"
+      },
+      "InvoiceNumber": {
+        "cell": "B4",
+        "editable": true,
+        "type": "text"
+      },
+      "InvoiceTitle": {
+        "cell": "B2",
+        "editable": true,
+        "type": "text"
+      },
+      "Items": {
+        "col": {
+          "Amount": {
+            "cell": "E",
+            "editable": false,
+            "name": "Amount",
+            "type": "text"
+          },
+          "Description": {
+            "cell": "B",
+            "editable": true,
+            "name": "Description",
+            "type": "text"
+          },
+          "Price": {
+            "cell": "D",
+            "editable": true,
+            "name": "Price",
+            "type": "text"
+          },
+          "Qty": {
+            "cell": "C",
+            "editable": true,
+            "name": "Qty",
+            "type": "text"
+          }
+        },
+        "editable": true,
+        "rows": {
+          "end": 28,
+          "start": 16
+        },
+        "type": "table",
+        "unitname": "Item"
+      },
+      "Logo": {
+        "cell": "D6",
+        "editable": true,
+        "type": "image"
+      },
+      "Note1": {
+        "cell": "B31",
+        "editable": true,
+        "type": "text"
+      },
+      "Note2": {
+        "cell": "B32",
+        "editable": true,
+        "type": "text"
+      },
+      "Note3": {
+        "cell": "B33",
+        "editable": true,
+        "type": "text"
+      },
+      "Other": {
+        "cell": "E32",
+        "editable": true,
+        "type": "text"
+      },
+      "Subtotal": {
+        "cell": "E29",
+        "editable": false,
+        "type": "text"
+      },
+      "Tax": {
+        "cell": "E31",
+        "editable": false,
+        "type": "text"
+      },
+      "TaxRate": {
+        "cell": "E30",
+        "editable": true,
+        "type": "text"
+      },
+      "ThankYouMessage": {
+        "cell": "B37",
+        "editable": true,
+        "type": "text"
+      },
+      "Total": {
+        "cell": "E33",
+        "editable": false,
+        "type": "text"
+      }
+    }
+  }
+}

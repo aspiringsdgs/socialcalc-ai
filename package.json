@@ -1,0 +1,33 @@
+{
+  "name": "socialcalc-module-test",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest --run"
+  },
+  "dependencies": {
+    "@ionic/react": "^8.0.0",
+    "ionicons": "^7.4.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "vite-plugin-commonjs": "^0.10.1"
+  },
+  "devDependencies": {
+    "@testing-library/dom": ">=7.21.4",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^4.0.1",
+    "jsdom": "^22.1.0",
+    "typescript": "^5.1.6",
+    "vite": "^5.0.0",
+    "vitest": "^0.34.6"
+  },
+  "description": "SocialCalc Module Testing App"
+}

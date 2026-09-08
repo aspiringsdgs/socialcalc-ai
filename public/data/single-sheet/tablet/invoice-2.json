@@ -1,0 +1,139 @@
+{
+  "mainSheet": "sheet1",
+  "msc": {
+    "numsheets": 1,
+    "currentid": "sheet1",
+    "currentname": "sheet1",
+    "sheetArr": {
+      "sheet1": {
+        "sheetstr": {
+          "savestr": "version:1.5\ncell:A2:b::2:::l:1:f:7\ncell:B2:t:INVOICE:b:1:1:1:1:l:3:f:6:cf:1:colspan:8\ncell:C2:t::b:2::2::l:1:f:7\ncell:D2:t::b:2::2::l:1:f:7\ncell:E2:t::b:2::2::l:1:f:7\ncell:F2:t::b:2::2::l:1:f:7\ncell:G2:b:2::2::l:1:f:7\ncell:H2:b:2::2::l:1:f:7\ncell:I2:t::b:2::2::l:1:f:7\ncell:A3:b::2:::l:3:f:7\ncell:B3:b:2:::2:l:3:f:7\ncell:E3:b:2::::l:1:f:7\ncell:F3:b:2::::l:1:f:7\ncell:G3:b:2::::l:1:f:7\ncell:H3:b:2::::l:1:f:7\ncell:I3:b:2:2:::l:3:f:7\ncell:A4:b::2:::l:3:f:7\ncell:B4:b::::2:l:3:f:3\ncell:C4:t:INVOICE # \\c:f:2:cf:2\ncell:D4:v:1:f:2:cf:2\ncell:F4:tvf:5:colspan:2:rowspan:4\ncell:I4:b::2:::l:3:f:7\ncell:A5:b::2:::l:3:f:7\ncell:B5:b::::2:l:3:f:4\ncell:F5:t::l:2:f:7\ncell:G5:l:2:f:7\ncell:H5:l:2:f:7\ncell:I5:t::b::1:::l:2:f:7\ncell:A6:b::2:::l:3:f:7\ncell:B6:b::::2:l:3:f:4\ncell:C6:t:INVOICE DATE\\c:f:2:cf:2\ncell:D6:f:2:cf:2:ntvf:4\ncell:F6:l:2:f:7\ncell:G6:l:2:f:7\ncell:H6:l:2:f:7\ncell:I6:b::1:::l:2:f:7\ncell:A7:b::2:::l:3:f:7\ncell:B7:b::::2:l:3:f:4\ncell:I7:b::2:::l:3:f:7\ncell:A8:b::2:::l:3:f:7\ncell:B8:b::::2:l:3:f:4\ncell:I8:b::2:::l:3:f:7\ncell:A9:b::2:::l:3:f:7\ncell:B9:b::::2:l:3:f:4\ncell:C9:t:BILL TO\\c:f:2\ncell:E9:t:FROM\\c:f:2:cf:2\ncell:F9:colspan:3\ncell:I9:b::2:::l:3:f:7\ncell:A10:b::2:::l:3:f:7\ncell:B10:b::::2:l:3:f:3\ncell:C10:t:[Name]:f:1:cf:2:colspan:2\ncell:E10:t:[Name]:f:1:cf:2:colspan:4\ncell:I10:b::2:::l:3:f:7\ncell:A11:b::2:::l:3:f:7\ncell:B11:b::::2:l:3:f:7\ncell:C11:t:[Street Address]:f:1:cf:2:colspan:2\ncell:E11:t:[Street Address]:f:1:colspan:4\ncell:I11:b::2:::l:3:f:7\ncell:A12:b::2:::l:3:f:7\ncell:B12:b::::2:l:3:f:7\ncell:C12:t:[City, State, Zip]:f:1:cf:2:colspan:2\ncell:E12:t:[City, State, Zip]:f:1:cf:2:colspan:4\ncell:I12:b::2:::l:3:f:7\ncell:A13:b::2:::l:3:f:7\ncell:B13:b::::2:l:3:f:7\ncell:C13:t:Phone\\c :f:1:cf:2:colspan:2\ncell:E13:t:Phone\\c :f:1:cf:2:colspan:4\ncell:I13:b::2:::l:3:f:7\ncell:A14:b::2:::l:3:f:7\ncell:B14:b::::2:l:3:f:3:cf:2\ncell:C14:b:::2::l:1:f:7\ncell:D14:b:::2::l:3:f:3:cf:2\ncell:E14:b:::2::l:1:f:7\ncell:F14:b:::2::l:1:f:7\ncell:G14:b:::2::l:1:f:7\ncell:H14:b:::2::l:1:f:7\ncell:I14:b::2:::l:3:f:7\ncell:A15:b::2:::l:3:f:7\ncell:B15:b::2::2:l:3:f:7\ncell:C15:t:Description:b:1:1:1:1:f:2:cf:1:colspan:3\ncell:D15:t:Description:b:2::2:2:l:3:f:3:cf:2:colspan:2:rowspan:1\ncell:E15:t::b:2:2:2::l:1:f:7\ncell:F15:t:Hours:b:1:1:1:1:f:2:cf:1\ncell:G15:t:Rate:b:1:1:1:1:f:2:cf:1\ncell:H15:t:Amount:b:1:1:1:1:f:2:cf:1\ncell:I15:b::2::2:l:3:f:7\ncell:A16:b::2:::l:3:f:7\ncell:B16:b::2::2:l:3:f:7\ncell:C16:b:1:1::1:f:1:cf:2:colspan:3\ncell:D16:b:1:1::1:l:3:f:7:cf:2:colspan:2:rowspan:1\ncell:E16:t::b:2:2:2::l:1:f:7\ncell:F16:b:1:1:::f:1:ntvf:1\ncell:G16:b:1:1:::f:1:ntvf:1\ncell:H16:vtf:t::IF(F16*G16>0,F16*G16,\"\"):b:1:1:::f:1:ntvf:1\ncell:I16:b::2::2:l:3:f:7\ncell:A17:b::2:::l:3:f:7\ncell:B17:b::2::2:l:3:f:7:cf:2\ncell:C17:b::1::1:f:1:cf:2:colspan:3\ncell:D17:b::1::1:l:1:f:7:colspan:2\ncell:E17:l:1:f:7\ncell:F17:b::1:::f:1:ntvf:1\ncell:G17:b::1:::f:1:ntvf:1\ncell:H17:vtf:t::IF(F17*G17>0,F17*G17,\"\"):b::1:::f:1:ntvf:1\ncell:I17:b::2::2:l:3:f:7\ncell:A18:b::2:::l:3:f:7\ncell:B18:b::2::2:l:3:f:7:cf:2:ntvf:3\ncell:C18:b::1::1:f:1:cf:2:colspan:3\ncell:D18:b::1::1:colspan:2\ncell:F18:b::1:::f:1:ntvf:1\ncell:G18:b::1:::f:1:ntvf:1\ncell:H18:vtf:t::IF(F18*G18>0,F18*G18,\"\"):b::1:::f:1:ntvf:1\ncell:I18:b::2::2:l:3:f:7\ncell:A19:b::2:::l:3:f:7\ncell:B19:b::2::2:l:3:f:7:cf:2:ntvf:3\ncell:C19:b::1::1:f:1:cf:2:colspan:3\ncell:D19:b::1::1:colspan:2\ncell:F19:b::1:::f:1:ntvf:1\ncell:G19:b::1:::f:1:ntvf:1\ncell:H19:vtf:t::IF(F19*G19>0,F19*G19,\"\"):b::1:::f:1:ntvf:1\ncell:I19:b::2::2:l:3:f:7\ncell:A20:b::2:::l:3:f:7\ncell:B20:b::2::2:l:3:f:7:cf:2:ntvf:3\ncell:C20:b::1::1:f:1:cf:2:colspan:3\ncell:D20:b::1::1:colspan:2\ncell:F20:b::1:::f:1:ntvf:1\ncell:G20:b::1:::f:1:ntvf:1\ncell:H20:vtf:t::IF(F20*G20>0,F20*G20,\"\"):b::1:::f:1:ntvf:1\ncell:I20:b::2::2:l:3:f:7\ncell:A21:b::2:::l:3:f:7\ncell:B21:b::2::2:l:3:f:7:cf:2:ntvf:3\ncell:C21:b::1::1:f:1:cf:2:colspan:3\ncell:D21:b::1::1:colspan:2\ncell:F21:b::1:::f:1:ntvf:1\ncell:G21:b::1:::f:1:ntvf:1\ncell:H21:vtf:t::IF(F21*G21>0,F21*G21,\"\"):b::1:::f:1:ntvf:1\ncell:I21:b::2::2:l:3:f:7\ncell:A22:b::2:::l:3:f:7\ncell:B22:b::2::2:l:3:f:7:cf:2:ntvf:3\ncell:C22:b::1::1:f:1:cf:2:colspan:3\ncell:D22:b::1::1:colspan:2\ncell:F22:b::1:::f:1:ntvf:1\ncell:G22:b::1:::f:1:ntvf:1\ncell:H22:vtf:t::IF(F22*G22>0,F22*G22,\"\"):b::1:::f:1:ntvf:1\ncell:I22:b::2::2:l:3:f:7\ncell:A23:b::2:::l:3:f:7\ncell:B23:b::2::2:l:3:f:7:cf:2\ncell:C23:b::1::1:f:1:cf:2:colspan:3\ncell:D23:b::1::1:colspan:2\ncell:F23:b::1:::f:1:ntvf:1\ncell:G23:b::1:::f:1:ntvf:1\ncell:H23:vtf:t::IF(F23*G23>0,F23*G23,\"\"):b::1:::f:1:ntvf:1\ncell:I23:b::2::2:l:3:f:7\ncell:A24:b::2:::l:3:f:7\ncell:B24:b::2::2:l:3:f:7:cf:2\ncell:C24:b::1::1:f:1:cf:2:colspan:3\ncell:D24:b::1::1:colspan:2\ncell:F24:b::1:::f:1:ntvf:1\ncell:G24:b::1:::f:1:ntvf:1\ncell:H24:vtf:t::IF(F24*G24>0,F24*G24,\"\"):b::1:::f:1:ntvf:1\ncell:I24:b::2::2:l:3:f:7\ncell:A25:b::2:::l:3:f:7\ncell:B25:b::2::2:l:3:f:7:cf:2\ncell:C25:b::1::1:f:1:cf:2:colspan:3\ncell:D25:b::1::1:colspan:2\ncell:F25:b::1:::f:1:ntvf:1\ncell:G25:b::1:::f:1:ntvf:1\ncell:H25:vtf:t::IF(F25*G25>0,F25*G25,\"\"):b::1:::f:1:ntvf:1\ncell:I25:b::2::2:l:3:f:7\ncell:A26:b::2:::l:3:f:7\ncell:B26:b::2::2:l:3:f:7:cf:2\ncell:C26:b::1::1:f:1:cf:2:colspan:3\ncell:D26:b::1::1:colspan:2\ncell:F26:b::1:::f:1:ntvf:1\ncell:G26:b::1:::f:1:ntvf:1\ncell:H26:vtf:t::IF(F26*G26>0,F26*G26,\"\"):b::1:::f:1:ntvf:1\ncell:I26:b::2::2:l:3:f:7\ncell:A27:b::2:::l:3:f:7\ncell:B27:b::2::2:l:3:f:7:cf:2\ncell:C27:b::1::1:f:1:cf:2:colspan:3\ncell:D27:b::1::1:colspan:2\ncell:F27:b::1:::f:1:ntvf:1\ncell:G27:b::1:::f:1:ntvf:1\ncell:H27:vtf:t::IF(F27*G27>0,F27*G27,\"\"):b::1:::f:1:ntvf:1\ncell:I27:b::2::2:l:3:f:7\ncell:A28:b::2:::l:3:f:4\ncell:B28:b::2::2:l:3:f:7:cf:2\ncell:C28:b::1:1:1:f:1:cf:2:colspan:3\ncell:D28:b::1:1:1:l:3:f:7:cf:2:colspan:2\ncell:E28:b:::2::l:3:f:7:cf:2\ncell:F28:b::1:1::f:1:ntvf:1\ncell:G28:b::1:1::f:1:ntvf:1\ncell:H28:vtf:t::IF(F28*G28>0,F28*G28,\"\"):b::1:::f:1:ntvf:1\ncell:I28:b::2::2:l:3:f:7\ncell:A29:b::2:::l:3:f:3\ncell:B29:b::2::2:l:3:f:3\ncell:C29:t:TOTAL:b:1:1:1:1:l:3:f:5:cf:2:colspan:5\ncell:D29:b:2::2::l:3:f:8:cf:2\ncell:E29:b:2:2:2::l:3:f:8:cf:2\ncell:F29:vtf:n:0:SUM(F16\\cF28):b:2:2:2::l:3:f:4:ntvf:2\ncell:G29:b:2:2:2::l:3:f:4:ntvf:2\ncell:H29:vtf:n:0:SUM(H16\\cH28):b:1:1:1::f:5:ntvf:1\ncell:I29:b::2::2:l:3:f:4\ncell:A30:b::2:::l:3:f:7\ncell:B30:b::::2:l:3:f:3:cf:2\ncell:C30:b:2::::l:1:f:7\ncell:D30:b:2::::l:1:f:7\ncell:E30:b:2::::l:1:f:7\ncell:F30:b:2::::l:1:f:7\ncell:G30:b:2::::l:1:f:7\ncell:H30:b:2::::l:1:f:7\ncell:I30:b::2:::l:3:f:3\ncell:A31:b::2:::l:3:f:7\ncell:B31:b::::2:l:3:f:7\ncell:D31:tvf:5:rowspan:4\ncell:I31:b::2:::l:3:f:7\ncell:A32:b::2:::l:3:f:7\ncell:B32:b::::2:l:3:f:7\ncell:I32:b::2:::l:3:f:7\ncell:A33:b::2:::l:3:f:7\ncell:B33:b::::2:l:3:f:7\ncell:I33:b::2:::l:3:f:7\ncell:A34:b::2:::l:3:f:7\ncell:B34:b::::2:l:3:f:7\ncell:I34:b::2:::l:3:f:7\ncell:A35:b::2:::l:3:f:7\ncell:B35:b:::2:2:l:3:f:7\ncell:C35:b:::2::l:3:f:7\ncell:D35:b:::2::l:3:f:7\ncell:E35:b:::2::l:3:f:7\ncell:F35:b:::2::l:3:f:7\ncell:G35:b:::2::l:3:f:7\ncell:H35:b:::2::l:3:f:7\ncell:I35:b::2:2::l:3:f:7\ncell:B36:b:1:::\ncell:C36:b:1:::\ncell:D36:b:1:::\ncell:E36:b:1:::\ncell:F36:b:1:::\ncell:G36:b:1:::\ncell:H36:b:1:::\ncell:I36:b:1:::\ncol:A:w:26\ncol:B:w:28\ncol:C:w:96\ncol:D:w:203\ncol:E:w:51\ncol:F:w:50\ncol:G:w:58\ncol:H:w:80\ncol:I:w:28\nrow:1:h:14.25\nrow:2:h:18.75\nrow:3:h:14.25\nrow:4:h:14.25\nrow:5:h:15.75\nrow:6:h:15.75\nrow:7:h:15.75\nrow:8:h:15.75\nrow:9:h:14.25\nrow:10:h:14.25\nrow:11:h:14.25\nrow:12:h:14.25\nrow:13:h:14.25\nrow:14:h:14.25\nrow:15:h:14.25\nrow:16:h:14.25\nrow:17:h:14.25\nrow:18:h:14.25\nrow:19:h:14.25\nrow:20:h:14.25\nrow:21:h:14.25\nrow:22:h:14.25\nrow:23:h:14.25\nrow:24:h:14.25\nrow:25:h:14.25\nrow:26:h:14.25\nrow:27:h:14.25\nrow:28:h:15.75\nrow:29:h:15.75\nrow:30:h:14.25\nrow:31:h:14.25\nrow:32:h:14.25\nrow:33:h:14.25\nrow:34:h:14.25\nrow:35:h:14.25\nsheet:c:9:r:36:h:12.75\nborder:1:1px solid rgb(0,0,0)\nborder:2:thin solid rgb(0,0,0)\ncellformat:1:center\ncellformat:2:left\nfont:1:* * Trebuchet MS\nfont:2:normal bold * Trebuchet MS\nfont:3:normal bold 10pt Arial\nfont:4:normal bold 12pt Arial\nfont:5:normal bold 12pt Trebuchet MS\nfont:6:normal bold 14pt Trebuchet MS\nfont:7:normal normal 10pt Arial\nfont:8:normal normal 12pt Arial\nlayout:1:padding:* * * *;vertical-align:bottom;\nlayout:2:padding:* * * *;vertical-align:middle;\nlayout:3:padding:* * * *;vertical-align:top;\nvalueformat:1:#,##0.00\nvalueformat:2:#,##0.00;(#,##0.00)\nvalueformat:3:d-mmm\nvalueformat:4:m/d/yy\nvalueformat:5:text-html\n"
+        },
+        "name": "sheet1",
+        "hidden": "0"
+      }
+    }
+  },
+  "footers": [
+    {
+      "name": "Invoice 2",
+      "index": 1,
+      "isActive": true
+    }
+  ],
+  "appMapping": {
+    "sheet1": {
+      "Logo": {
+        "type": "image",
+        "cell": "F4",
+        "editable": true
+      },
+      "Signature": {
+        "type": "image",
+        "cell": "D31",
+        "editable": true
+      },
+      "Heading": {
+        "type": "text",
+        "cell": "B2",
+        "editable": true
+      },
+      "Date": {
+        "type": "text",
+        "cell": "D6",
+        "editable": true
+      },
+      "InvoiceNumber": {
+        "type": "text",
+        "cell": "D4",
+        "editable": true
+      },
+      "From": {
+        "type": "form",
+        "editable": true,
+        "formContent": {
+          "Name": {
+            "type": "text",
+            "cell": "E10",
+            "editable": true
+          },
+          "StreetAddress": {
+            "type": "text",
+            "cell": "E11",
+            "editable": true
+          },
+          "CityStateZip": {
+            "type": "text",
+            "cell": "E12",
+            "editable": true
+          },
+          "Phone": {
+            "type": "text",
+            "cell": "E13",
+            "editable": true
+          }
+        }
+      },
+      "BillTo": {
+        "type": "form",
+        "editable": true,
+        "formContent": {
+          "Name": {
+            "type": "text",
+            "cell": "C10",
+            "editable": true
+          },
+          "StreetAddress": {
+            "type": "text",
+            "cell": "C11",
+            "editable": true
+          },
+          "CityStateZip": {
+            "type": "text",
+            "cell": "C12",
+            "editable": true
+          },
+          "Phone": {
+            "type": "text",
+            "cell": "C13",
+            "editable": true
+          }
+        }
+      },
+      "Items": {
+        "type": "table",
+        "unitname": "Item",
+        "rows": {
+          "start": 16,
+          "end": 28
+        },
+        "col": {
+          "Description": {
+            "type": "text",
+            "name": "Description",
+            "editable": true,
+            "cell": "C"
+          },
+          "Hours": {
+            "type": "text",
+            "name": "Hours",
+            "editable": true,
+            "cell": "F"
+          },
+          "Rate": {
+            "type": "text",
+            "name": "Rate",
+            "editable": true,
+            "cell": "G"
+          }
+        },
+        "editable": true
+      },
+      "Total": {
+        "type": "text",
+        "cell": "H29",
+        "editable": false
+      }
+    }
+  }
+}

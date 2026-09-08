@@ -1,0 +1,307 @@
+/* Demo Videos Modal — Simple, Clean & Professional */
+.demo-videos-modal {
+  --border-radius: 20px;
+  --background: #ffffff;
+  --width: 95vw;
+  --max-width: 800px;
+  --height: 720px;
+  --max-height: 92vh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 768px) {
+  .demo-videos-modal {
+    --width: 800px;
+    --height: 720px;
+    --max-height: 92vh;
+  }
+}
+
+/* Header */
+.demo-videos-modal-toolbar {
+  --min-height: 48px;
+  --background: var(--ion-color-primary, #2563eb);
+  --color: #ffffff;
+}
+
+.demo-modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+}
+
+.demo-modal-header-icon {
+  font-size: 22px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.demo-modal-title-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.demo-modal-close-btn {
+  --color: #ffffff;
+  font-size: 20px;
+}
+
+/* Content */
+.demo-videos-modal-content {
+  --background: #ffffff;
+}
+
+.demo-slider-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Video Title */
+.demo-video-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+/* Video Card */
+.demo-video-card {
+  position: relative;
+  background: #0f172a;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.16);
+  aspect-ratio: 16 / 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+}
+
+.demo-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+/* Play/Pause Overlay */
+.demo-video-play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 5;
+}
+
+.demo-video-play-btn.visible,
+.demo-video-card:hover .demo-video-play-btn {
+  opacity: 1;
+}
+
+.demo-video-play-btn:active {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+/* Counter badge */
+.demo-video-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 16px;
+  z-index: 4;
+}
+
+/* 1-sentence Description */
+.demo-video-description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #334155;
+  text-align: center;
+  padding: 0 12px;
+}
+
+/* Navigation Controls */
+.demo-slider-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding-top: 6px;
+}
+
+.demo-nav-btn {
+  --color: #475569;
+  font-size: 26px;
+  margin: 0;
+}
+
+.demo-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 5px;
+  background: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.demo-dot.active {
+  width: 26px;
+  background: var(--ion-color-primary, #2563eb);
+}
+
+/* Pure White Theme Overrides */
+[data-theme="pure-white"] .demo-dot {
+  background: #94a3b8;
+}
+
+[data-theme="pure-white"] .demo-dot.active {
+  background: #0f172a;
+}
+
+/* Formula Guide Section */
+.formula-guide-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.formula-guide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.formula-guide-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.formula-guide-icon {
+  font-size: 18px;
+  color: var(--ion-color-primary, #2563eb);
+}
+
+.formula-guide-tip {
+  font-size: 11px;
+  color: #475569;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.formula-guide-tip code {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.formula-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.formula-guide-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formula-guide-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.formula-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.formula-name-badge {
+  font-size: 10px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.formula-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.formula-card-desc {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
+}
