@@ -264,6 +264,16 @@ Plugins can be enabled, disabled, or toggled on demand without altering core spr
 | **Listeners** | \`modules/listeners.js\` | Normalized cross-browser mouse and pointer interaction listeners. |
 | **Formatting** | \`modules/formatting.js\` | Text color, background color, font family, font size, and border styling. |
 | **History** | \`modules/history.js\` | Complete multi-step Undo and Redo command history stack. |
+| **AI Agent** | \`modules/agent.js\` | Text editor agent connecting LLMs (Gemini, backends) for automated spreadsheet editing. |
+
+#### Row & Column Headers Plugin Preview:
+![123 Row & ABCD Column Headers with Active Highlight](/screenshots/headers.png)
+
+*Interactive Row & Column Headers: 123 numbers and ABCD letter bars with active coordinate indicators, row selection, and smooth highlight.*
+
+![Interactive Column Resizing Handle and Width Indicator](/screenshots/col-resize-picker.png)
+
+*Column Resizing: Hover or select any column to reveal an interactive drag handle with live column width indicators.*
     `,
     codeSnippet: {
       language: "javascript",
@@ -282,6 +292,65 @@ AppGeneral.toggleRowColHeaders();
 // Inspect all registered plugins
 const plugins = AppGeneral.PluginManager.getAllPlugins();
 console.log("Registered plugins:", Object.keys(plugins));`,
+    },
+  },
+  {
+    id: "ai-agent-plugin",
+    category: "Modular Plugins",
+    title: "AI Agent Plugin (Text Editor Agent)",
+    description: "Connect client-side Gemini or backend (Node.js/Python Tornado) LLMs to intelligently inspect and edit spreadsheets.",
+    badge: "AI Powered",
+    content: `
+### AI Agent Plugin & Text Editor Agent
+
+The **AI Agent Plugin** (\`modules/agent.js\`) bridges SocialCalc with Large Language Models (Gemini, OpenAI, Anthropic, Claude) and custom API backends.
+
+#### Key Capabilities:
+1. **Intelligent Sheet & Mapping Context**: Introspects active sheets, bounding used ranges, non-empty cells, and automatically resolves template \`appMapping\` definitions (e.g. \`BillTo.Name\` -> \`C5\`, \`Items\` table -> rows 21–33). If mappings are empty, it gracefully falls back to free-form coordinate mode.
+2. **Standardized Tool Schemas**: Pre-configured function declarations for Gemini (\`functionDeclarations\`), OpenAI (\`tool_calls\`), and generic JSON schema.
+3. **Atomic Command Execution**: Executes \`SET_CELL\`, \`SET_CELLS\`, \`CLEAR_CELL\`, \`SET_MAPPING_FIELD\`, \`APPLY_MAPPING_DATA\`, and \`RAW_COMMAND\` in a single atomic SocialCalc command batch.
+4. **Future-Ready Extensible Action Registry**: Easily register custom action handlers for upcoming agents (e.g. styling, border, merge/unmerge, dimensions) via \`registerAgentActionHandler\`.
+5. **Universal Compatibility**: Zero React/Ionic dependencies in the core module. Runs in browser client-side workflows as well as backend Node.js and Python Tornado servers.
+
+![SocialCalc AI Agent Workbench and Live Execution Console](/screenshots/agent-console.png)
+
+*SocialCalc AI Agent Workbench: Live execution console inspecting sheet context, template mappings, and executing atomic updates with real-time success logs.*
+    `,
+    codeSnippet: {
+      language: "typescript",
+      code: `import {
+  getAgentContext,
+  getAgentToolDefinitions,
+  generateAgentSystemPrompt,
+  executeAgentResponse,
+  exportAgentContext,
+  executeAgentActions
+} from "socialcalc-ai";
+
+// 1. Client-side Gemini Integration
+const context = getAgentContext();
+const tools = getAgentToolDefinitions({ format: "gemini" });
+const prompt = generateAgentSystemPrompt();
+
+// Call Gemini SDK or API
+const geminiResponse = await aiClient.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents: "Fill invoice for Acme Corp with 2 items",
+  config: { systemInstruction: prompt, tools: [tools] }
+});
+
+// Apply LLM function call or JSON actions directly to spreadsheet
+executeAgentResponse(geminiResponse);
+
+// 2. Backend Transmission (Node.js / Python Tornado)
+const payload = exportAgentContext();
+const res = await fetch("/api/agent/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "Update total formula", context: payload })
+});
+const { actions } = await res.json();
+executeAgentActions(actions);`,
     },
   },
   {
@@ -305,6 +374,26 @@ A responsive bottom sheet and modal for editing cell contents, styles, formulas,
   - \`onSave: (payload) => void\` - Callback upon commit.
   - \`onClose: () => void\` - Dismiss callback.
 
+![Cell Edit Modal Base Overview](/screenshots/edit-cell-modal.png)
+
+*Cell Edit Modal: Clean, responsive bottom-sheet editor featuring real-time calculation preview and formatted display.*
+
+![Cell Edit Modal Tabs and Feature Suite](/screenshots/edit-cell-modal-features.png)
+
+*Multi-Tab Editor: Instant switching between Text/Formula input, Number/Date formatting, Font colors, Background fills, Borders, and Image attachments.*
+
+![Font Color Palette](/screenshots/edit-cell-modal-text-color.png)
+
+*Font Colors: 16 curated high-contrast typography colors for readable, accessible spreadsheet styling.*
+
+![Background Color Palette](/screenshots/edit-cell-modal-background-color.png)
+
+*Cell Backgrounds: Tint and solid swatches to highlight headers, totals, key metrics, and category blocks.*
+
+![Cell Border Customizer](/screenshots/edit-cell-model-cell-borders.png)
+
+*Cell Borders: Granular Top, Bottom, Left, and Right border stroke selection with live border preview.*
+
 #### 2. \`<HorizontalScrollBar />\`
 A smooth, custom horizontal track slider for wide spreadsheets.
 - **Props**:
@@ -318,8 +407,23 @@ Context menu triggered when tapping or clicking row headers:
 - Delete Selected Row
 - Clear Row Contents
 
+![Row Action Popover Menu](/screenshots/row-options.png)
+
+*Row Action Popover: Contextual popup menu on row header click supporting Insert Row Above, Insert Row Below, and Delete Row.*
+
 #### 4. \`<EditableCellsModal />\`
 Template permission editor for configuring which cells end-users are allowed to modify.
+
+![Editable Cells and Template Permissions Modal](/screenshots/editable-cells-modal.png)
+
+*Template Permissions: Live inspector for \`appMapping\` fields, identifying locked formulas, headers, and editable input fields.*
+
+#### 5. \`<AgentModal />\`
+Interactive AI Agent Workbench for inspecting live context, testing quick fill actions, executing custom JSON commands, and viewing LLM integration schemas.
+
+![AI Agent Modal Workbench Console](/screenshots/agent-console.png)
+
+*AI Agent Workbench: Interactive modal to trigger quick text editor actions, inspect sheet context, and monitor execution command logs.*
     `,
     codeSnippet: {
       language: "tsx",
@@ -447,6 +551,30 @@ SocialCalc provides over 80 built-in spreadsheet calculation functions.
 - \`PV(rate, nper, pmt, [fv], [type])\`: Present value.
 - \`FV(rate, nper, pmt, [pv], [type])\`: Future value.
 - \`NPV(rate, val1, val2...)\`: Net present value.
+
+#### 5. Cell Value Formatting Options
+
+SocialCalc supports formatted display types for diverse commercial, mathematical, and accounting needs:
+
+![Numeric Formatting](/screenshots/cell-format-numbers.png)
+
+*Numeric Formats: Precision decimal control, integer display, comma thousand separators, and accounting format.*
+
+![Currency Formatting](/screenshots/cell-format-currency.png)
+
+*Currency Formats: Localized currency symbols ($), comma grouping, and negative parenthesis notation.*
+
+![Percentage Formatting](/screenshots/cell-format-percent.png)
+
+*Percentage Formats: Clean fraction-to-percentage conversion with configurable decimal precision.*
+
+![Date Formatting](/screenshots/cell-format-date.png)
+
+*Date Formats: ISO format, short date (MM/DD/YYYY), medium date (DD-MMM-YYYY), and long date options.*
+
+![Time Formatting](/screenshots/cell-format-time.png)
+
+*Time Formats: 12-hour AM/PM and 24-hour military timestamp displays.*
     `,
     codeSnippet: {
       language: "excel",

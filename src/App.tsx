@@ -37,6 +37,7 @@ import {
   lockClosedOutline,
   lockOpenOutline,
   cloudUploadOutline,
+  sparklesOutline,
 } from "ionicons/icons";
 
 import * as AppGeneral from "socialcalc";
@@ -46,6 +47,7 @@ import {
   HorizontalScrollBar,
   EditableCellsModal,
   DemoVideosModal,
+  AgentModal,
 } from "socialcalc";
 
 // Standard MSC templates from src/data
@@ -119,6 +121,7 @@ const App: React.FC = () => {
   const [touchScrollActive, setTouchScrollActive] = useState<boolean>(true);
   const [cellEditModalActive, setCellEditModalActive] = useState<boolean>(true);
   const [editableCellsOnlyActive, setEditableCellsOnlyActive] = useState<boolean>(false);
+  const [agentActive, setAgentActive] = useState<boolean>(true);
 
   // Cell Edit Modal state
   const [cellEditData, setCellEditData] = useState<{
@@ -147,6 +150,7 @@ const App: React.FC = () => {
   const [colorMode, setColorMode] = useState<"background" | "font">("background");
   const [showEditableCellsModal, setShowEditableCellsModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
+  const [showAgentModal, setShowAgentModal] = useState(false);
 
   const colors = [
     { name: "red", label: "Red", hex: "#ff4444" },
@@ -441,6 +445,16 @@ const App: React.FC = () => {
     }
   };
 
+  const handleToggleAgent = () => {
+    try {
+      const active = AppGeneral.toggleAgent();
+      setAgentActive(active);
+      notify(`AI Agent Plugin: ${active ? "ON" : "OFF"}`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   // Row Action Popover Actions
   const handleInsertRowAbove = (rowNum: number) => {
     try {
@@ -537,6 +551,9 @@ const App: React.FC = () => {
                 <IonButton title="Formula Guides & Demos" onClick={() => setShowDemoModal(true)}>
                   <IonIcon slot="icon-only" icon={videocamOutline} />
                 </IonButton>
+                <IonButton title="AI Agent Workbench" onClick={() => setShowAgentModal(true)}>
+                  <IonIcon slot="icon-only" icon={sparklesOutline} />
+                </IonButton>
                 <IonButton title="Manage Cell Mappings" onClick={() => setShowEditableCellsModal(true)}>
                   <IonIcon slot="icon-only" icon={settingsOutline} />
                 </IonButton>
@@ -609,6 +626,14 @@ const App: React.FC = () => {
                   style={{ marginRight: 4 }}
                 />
                 {editableCellsOnlyActive ? "Locked" : "Unlocked"}
+              </button>
+              <button
+                className={`plugin-btn ${agentActive ? "active" : ""}`}
+                onClick={handleToggleAgent}
+                title="Toggle AI Agent Plugin"
+              >
+                <IonIcon icon={sparklesOutline} style={{ marginRight: 4 }} />
+                Agent: {agentActive ? "ON" : "OFF"}
               </button>
             </div>
 
@@ -685,6 +710,15 @@ const App: React.FC = () => {
         <DemoVideosModal
           isOpen={showDemoModal}
           onClose={() => setShowDemoModal(false)}
+        />
+
+        {/* AI Agent Workbench Modal */}
+        <AgentModal
+          isOpen={showAgentModal}
+          onClose={() => setShowAgentModal(false)}
+          appMapping={appMapping}
+          currentSheet={`sheet${activeSheet}`}
+          onExecute={(res) => notify(`Agent applied ${res.count} changes`)}
         />
 
         {/* Toast Notification */}

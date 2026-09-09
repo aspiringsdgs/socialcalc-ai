@@ -21,6 +21,7 @@ export * from "./modules/horizontal-scroll.js";
 export * from "./modules/grid-lines.js";
 export * from "./modules/editable-cells.js";
 export * from "./modules/invoice.js";
+export * from "./modules/agent.js";
 
 // React & Ionic UI Components
 export interface HorizontalScrollBarProps {
@@ -64,5 +65,15 @@ export interface DemoVideosModalProps {
 }
 export const DemoVideosModal: React.FC<any>;
 export const FORMULA_GUIDES: any[];
+
+export interface AgentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  appMapping?: any;
+  currentSheet?: string;
+  onExecute?: (result: any) => void;
+  [key: string]: any;
+}
+export const AgentModal: React.FC<any>;
 
 export function compressImage(file: File, options?: any): Promise<string>;

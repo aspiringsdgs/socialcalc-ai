@@ -24,6 +24,7 @@ Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `
   - [RowActionPopover](#3-rowactionpopover)
   - [EditableCellsModal](#4-editablecellsmodal)
   - [DemoVideosModal](#5-demovideosmodal)
+  - [AgentModal](#6-agentmodal)
 - [Plugins & Modules API](#-plugins--modules-api)
   - [Row & Column Headers](#1-row--column-headers-modulesrow-col-headersjs)
   - [Grid Lines](#2-grid-lines-modulesgrid-linesjs)
@@ -34,6 +35,8 @@ Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `
   - [History & Undo/Redo](#7-history-undo--redo-moduleshistoryjs)
   - [Exporters & Sheets](#8-exporters--sheets-modulesexportersjs-modulessheetsjs)
   - [Invoice Utilities](#9-invoice-utilities-modulesinvoicejs)
+  - [AI Agent Plugin (Text Editor Agent)](#10-ai-agent-plugin-text-editor-agent-modulesagentjs)
+  - [Cell Formatting & Display Suite](#11-cell-formatting--display-suite)
 - [Event-Driven Architecture](#-event-driven-architecture)
 - [AI & MultiSheet Calc (MSC) Integration](#-ai--multisheet-calc-msc-integration)
 - [TypeScript Support](#-typescript-support)
@@ -277,6 +280,16 @@ A modern, responsive bottom-sheet modal that replaces legacy browser `prompt()` 
 - **Image Insertion**: Embed images into cells with automatic client-side compression via `imageCompressor.ts`.
 - **Fallback**: Automatically falls back to native inline input if modal mode is disabled.
 
+<p align="center">
+  <img src="../public/screenshots/edit-cell-modal.png" alt="Cell Edit Modal Overview" width="48%" />
+  <img src="../public/screenshots/edit-cell-modal-features.png" alt="Cell Edit Modal Features" width="48%" />
+</p>
+<p align="center">
+  <img src="../public/screenshots/edit-cell-modal-text-color.png" alt="Font Color Palette" width="31%" />
+  <img src="../public/screenshots/edit-cell-modal-background-color.png" alt="Background Color Palette" width="31%" />
+  <img src="../public/screenshots/edit-cell-model-cell-borders.png" alt="Cell Borders Customizer" width="31%" />
+</p>
+
 ```tsx
 <CellEditModal
   isOpen={isOpen}
@@ -301,6 +314,10 @@ A context popup that appears when clicking any row header index:
 - **Insert Row Below**: Inserts an empty row below the selected index.
 - **Delete Row**: Removes the selected row and cascades formula references.
 
+<p align="center">
+  <img src="../public/screenshots/row-options.png" alt="Row Action Popover Menu" width="50%" />
+</p>
+
 ```tsx
 <RowActionPopover
   isOpen={showPopover}
@@ -315,6 +332,10 @@ An administrative inspector for template creators:
 - View all locked vs editable cells in the active sheet.
 - Bind application field mappings (e.g., `vendor_name -> B4`) to spreadsheet coordinates.
 - Test template locking permissions.
+
+<p align="center">
+  <img src="../public/screenshots/editable-cells-modal.png" alt="Editable Cells Modal" width="60%" />
+</p>
 
 ```tsx
 <EditableCellsModal
@@ -335,12 +356,39 @@ An interactive help and reference modal containing:
 />
 ```
 
+### 6. `AgentModal`
+An interactive AI Agent Workbench and chat modal:
+- Inspect active sheet context, dimensions, and detected `appMapping` fields.
+- Test one-click quick actions (e.g. fill invoice header, populate table items, set formula).
+- Execute custom JSON action arrays directly or copy LLM tool schemas (Gemini function declarations, OpenAI tools, and system prompts).
+- View real-time action execution logs.
+
+<p align="center">
+  <img src="../public/screenshots/agent-console.png" alt="SocialCalc AI Agent Workbench" width="65%" />
+</p>
+
+```tsx
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  appMapping={appMapping}
+  currentSheet="sheet1"
+  onExecute={(res) => console.log("Agent actions:", res)}
+/>
+```
+
 ---
 
 ## 🔌 Plugins & Modules API
 
 ### 1. Row & Column Headers (`modules/row-col-headers.js`)
 Enables 123 row numbers and ABCD column headers with interactive column resizing:
+
+<p align="center">
+  <img src="../public/screenshots/headers.png" alt="Row & Col Headers" width="48%" />
+  <img src="../public/screenshots/col-resize-picker.png" alt="Column Resize Handle" width="48%" />
+</p>
+
 ```ts
 // Enable row/col headers
 AppGeneral.enableRowColHeaders();
@@ -454,6 +502,78 @@ const coords = getInvoiceCoordinates();
 // Returns standard coordinates for billTo, from, invoiceDetails, items, totals
 ```
 
+### 10. AI Agent Plugin (Text Editor Agent) (`modules/agent.js`)
+Provides an extensible AI agent layer to connect LLMs (Gemini, OpenAI, Anthropic) or custom backends (Node.js, Python Tornado) with the spreadsheet engine.
+
+#### Key Features:
+- **Intelligent Context Extraction**: Reads current sheet, bounding range, non-empty cells, and automatically parses template `appMapping` fields (e.g. `BillTo.Name` -> `C5`, `Items` table rows 21–33) or falls back to free-form mode if mappings are empty.
+- **LLM-Ready Tool Schemas & Prompts**: Generates Gemini `functionDeclarations`, OpenAI `tool_calls`, and optimized system prompts out of the box.
+- **Atomic Text Editor Actions**: Executes `SET_CELL`, `SET_CELLS`, `CLEAR_CELL`, `SET_MAPPING_FIELD`, `APPLY_MAPPING_DATA`, and `RAW_COMMAND`.
+- **Extensible Action Handler Registry**: Ready for future styling, merge/unmerge, and dimension agents (`registerAgentActionHandler`).
+- **Universal Compatibility**: Zero React/Ionic dependencies in the core module; works in browser client calls as well as server runtimes.
+
+<p align="center">
+  <img src="../public/screenshots/agent-console.png" alt="AI Agent Execution Console" width="70%" />
+</p>
+
+#### Client-side Gemini Integration Example:
+```ts
+import {
+  getAgentContext,
+  getAgentToolDefinitions,
+  generateAgentSystemPrompt,
+  executeAgentResponse,
+} from "socialcalc-ai";
+
+// 1. Extract context & tool declarations
+const context = getAgentContext();
+const tools = getAgentToolDefinitions({ format: "gemini" });
+const systemPrompt = generateAgentSystemPrompt();
+
+// 2. Call Gemini API (SDK or direct fetch)
+const geminiResponse = await callGemini({
+  systemInstruction: systemPrompt,
+  contents: [{ role: "user", parts: [{ text: "Fill invoice for Acme Corp with $500 consulting" }] }],
+  tools,
+});
+
+// 3. Apply actions to SocialCalc sheet
+const result = executeAgentResponse(geminiResponse);
+console.log(`Executed ${result.count} actions atomically!`);
+```
+
+#### Backend Integration Example (Node.js Express or Python Tornado):
+```ts
+// Client sends exportable context to backend
+const payload = exportAgentContext();
+const res = await fetch("/api/agent/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "Update invoice date to today", context: payload }),
+});
+
+const { actions } = await res.json();
+executeAgentActions(actions);
+```
+
+### 11. Cell Formatting & Display Suite
+SocialCalc provides built-in formatters for commercial, financial, and date/time data types:
+
+<p align="center">
+  <img src="../public/screenshots/cell-format-numbers.png" alt="Numeric Formatting" width="31%" />
+  <img src="../public/screenshots/cell-format-currency.png" alt="Currency Formatting" width="31%" />
+  <img src="../public/screenshots/cell-format-percent.png" alt="Percentage Formatting" width="31%" />
+</p>
+<p align="center">
+  <img src="../public/screenshots/cell-format-date.png" alt="Date Formatting" width="48%" />
+  <img src="../public/screenshots/cell-format-time.png" alt="Time Formatting" width="48%" />
+</p>
+
+- **Numeric Formats**: Precision decimal control, integer display, comma thousand grouping (`#,##0.00`).
+- **Currency Formats**: Localized currency symbols (`$`, `€`, `₹`), negative parentheses notation.
+- **Percentage Formats**: Automatic conversion of decimals/fractions into clean percentage percentages (`15.00%`).
+- **Date & Time Formats**: ISO timestamps, short date (`MM/DD/YYYY`), medium date (`DD-MMM-YYYY`), and 12/24-hour clocks.
+
 ---
 
 ## 📡 Event-Driven Architecture
@@ -467,6 +587,7 @@ const coords = getInvoiceCoordinates();
 | `socialcalc:cell-change` | `{ coord: string, value: string }` | Fired after a cell's value or formula is committed and recalculated. |
 | `socialcalc:horizontal-scroll`| `{ currentFirstCol: number, currentColName: string, totalCols: number }` | Fired whenever the horizontal viewport column changes. |
 | `socialcalc:plugin-change` | `{ pluginName: string, state: boolean, allStates: Record<string, boolean> }` | Fired whenever a plugin is registered, enabled, or disabled. |
+| `socialcalc:agent-action` | `{ actions: Array, commands: string[], results: Array, timestamp: number }` | Fired whenever the AI Agent executes actions on the spreadsheet. |
 
 ### Event Listener Example:
 

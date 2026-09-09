@@ -34,3 +34,15 @@ if (AppGeneral.SocialCalc) {
 } else {
     console.log('❌ SocialCalc object not found');
 }
+
+// Test agent module loading in Node.js
+try {
+    const { enableAgent, getAgentContext, getAgentToolDefinitions } = await import('./socialcalc/modules/agent.js');
+    if (typeof enableAgent === 'function' && typeof getAgentContext === 'function' && typeof getAgentToolDefinitions === 'function') {
+        console.log('✅ Agent module (socialcalc/modules/agent.js) - Available in Node.js');
+    } else {
+        console.log('❌ Agent module - Missing functions');
+    }
+} catch (agentError) {
+    console.log(`❌ Agent module error: ${agentError.message}`);
+}

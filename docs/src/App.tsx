@@ -186,6 +186,33 @@ export const App: React.FC = () => {
             {renderInlineFormatting(trimmed.replace("> ", ""))}
           </blockquote>
         );
+      } else if (trimmed.startsWith("![") && trimmed.includes("](") && trimmed.endsWith(")")) {
+        flushList();
+        flushTable();
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (imgMatch) {
+          const src = imgMatch[2];
+          let sizeClass = "doc-figure-compact";
+          if (src.includes("agent-console") || src.includes("headers")) {
+            sizeClass = "doc-figure-wide";
+          } else if (
+            src.includes("edit-cell-modal") ||
+            src.includes("col-resize") ||
+            src.includes("row-options") ||
+            src.includes("cell-format")
+          ) {
+            sizeClass = "doc-figure-small";
+          } else if (src.includes("editable-cells-modal")) {
+            sizeClass = "doc-figure-compact";
+          }
+
+          elements.push(
+            <figure key={idx} className={`doc-figure ${sizeClass}`}>
+              <img src={src} alt={imgMatch[1]} className="doc-image" loading="lazy" />
+              {imgMatch[1] && <figcaption className="doc-figcaption">{imgMatch[1]}</figcaption>}
+            </figure>
+          );
+        }
       } else if (trimmed.length > 0) {
         flushList();
         elements.push(<p key={idx} className="doc-p">{renderInlineFormatting(trimmed)}</p>);
@@ -243,7 +270,7 @@ export const App: React.FC = () => {
             title="View socialcalc-ai on npm"
           >
             <span className="npm-badge-pill">npm</span>
-            <span>v1.0.1</span>
+            <span>v1.0.3</span>
             <ExternalLink size={12} />
           </a>
 
@@ -255,17 +282,6 @@ export const App: React.FC = () => {
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-
-          <a
-            href="http://localhost:5173"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="studio-launch-btn"
-            title="Open interactive SocialCalc editor"
-          >
-            <span>Live editor</span>
-            <ExternalLink size={13} />
-          </a>
         </div>
       </header>
 
