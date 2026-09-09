@@ -31,6 +31,9 @@ export function getActiveEditor() {
   if (typeof window !== "undefined" && window.SocialCalc) {
     SocialCalc = window.SocialCalc;
   }
+  if (SocialCalc && SocialCalc._activeEditor) {
+    return SocialCalc._activeEditor;
+  }
   if (SocialCalc && SocialCalc.GetCurrentWorkBookControl) {
     const ctrl = SocialCalc.GetCurrentWorkBookControl();
     if (ctrl && ctrl.workbook && ctrl.workbook.spreadsheet && ctrl.workbook.spreadsheet.editor) {

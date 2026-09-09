@@ -251,6 +251,39 @@ body {
   background: var(--accent-hover);
 }
 
+.npm-launch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 550;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.npm-launch-btn:hover {
+  border-color: #cb3837;
+  color: #cb3837;
+}
+
+.npm-badge-pill {
+  background: #cb3837;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+}
+
 /* ===== Body Layout ===== */
 
 .docs-main-container {
@@ -357,8 +390,7 @@ body {
 .docs-content-area {
   flex: 1;
   min-width: 0;
-  padding: 40px 56px 100px;
-  max-width: 800px;
+  padding: 40px 80px 100px;
 }
 
 /* ===== Page Header ===== */

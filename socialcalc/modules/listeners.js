@@ -30,6 +30,7 @@ export function enableCellEditModal() {
   if (typeof window !== "undefined" && window.SocialCalc) {
     window.SocialCalc.isCellEditModalEnabled = () => true;
   }
+  setupMouseListener();
 }
 
 /**
@@ -56,6 +57,9 @@ export function toggleCellEditModal(show) {
   _cellEditModalEnabled = typeof show === "boolean" ? show : !_cellEditModalEnabled;
   if (typeof window !== "undefined" && window.SocialCalc) {
     window.SocialCalc.isCellEditModalEnabled = () => _cellEditModalEnabled;
+  }
+  if (_cellEditModalEnabled) {
+    setupMouseListener();
   }
   return _cellEditModalEnabled;
 }
@@ -167,7 +171,15 @@ export function setupMouseListener() {
   if (typeof window !== "undefined" && window.SocialCalc) {
     SocialCalc = window.SocialCalc;
   }
-  if (!SocialCalc || !SocialCalc.EditorMouseInfo) return;
+  if (!SocialCalc || !SocialCalc.EditorMouseInfo) {
+    if (typeof window !== "undefined") {
+      setTimeout(setupMouseListener, 50);
+    }
+    return;
+  }
+
+  if (SocialCalc._customMouseListenerInstalled) return;
+  SocialCalc._customMouseListenerInstalled = true;
 
   const originalDblClick = SocialCalc.ProcessEditorDblClick;
 
@@ -232,8 +244,15 @@ export function setupMouseListener() {
     while (headerTd && headerTd.tagName !== "TD" && headerTd.tagName !== "TH" && headerTd !== document.body) {
       headerTd = headerTd.parentNode;
     }
-    if (!isColHeader && headerTd && headerTd.className && typeof headerTd.className === "string" && headerTd.className.indexOf("colname") !== -1) {
-      isColHeader = true;
+    if (!isColHeader && headerTd) {
+      if (headerTd.className && typeof headerTd.className === "string" && headerTd.className.indexOf("colname") !== -1) {
+        isColHeader = true;
+      } else if (headerTd.tagName === "TD" || headerTd.tagName === "TH") {
+        var headerTxt = (headerTd.textContent || "").trim().toUpperCase();
+        if (/^[A-Z]{1,2}$/.test(headerTxt)) {
+          isColHeader = true;
+        }
+      }
     }
 
     if (isRowColHeadersEnabled() && isColHeader) {
@@ -292,7 +311,11 @@ export function setupMouseListener() {
 
     // Toggle Cell Callback
     if (SocialCalc.Callbacks && SocialCalc.Callbacks.ToggleCell) {
-      SocialCalc.Callbacks.ToggleCell(result.coord);
+      try {
+        SocialCalc.Callbacks.ToggleCell(result.coord);
+      } catch (err) {
+        // Ignore toggle cell errors in custom environments
+      }
     }
 
     // Move ECell (Updates Selection)
@@ -367,7 +390,7 @@ export function setupMouseListener() {
   const originalKeyPress = SocialCalc.ProcessKeyPress;
 
   SocialCalc.ProcessKeyDown = function (e) {
-    const isModalOpen = !!document.querySelector(".sc-cell-edit-backdrop");
+    const isModalOpen = !!document.querySelector(".sc-cell-modal-backdrop, .sc-cell-edit-backdrop, .sc-modal-container");
     const activeElement = document.activeElement;
     const isTypingInInput =
       activeElement &&
@@ -386,7 +409,7 @@ export function setupMouseListener() {
   };
 
   SocialCalc.ProcessKeyPress = function (e) {
-    const isModalOpen = !!document.querySelector(".sc-cell-edit-backdrop");
+    const isModalOpen = !!document.querySelector(".sc-cell-modal-backdrop, .sc-cell-edit-backdrop, .sc-modal-container");
     const activeElement = document.activeElement;
     const isTypingInInput =
       activeElement &&
@@ -416,8 +439,8 @@ function triggerCustomModal(editor) {
   if (!editor || !editor.ecell) return;
 
   const coord = editor.ecell.coord;
-  const sheet = editor.context.sheetobj;
-  const cell = sheet.GetAssuredCell(coord);
+  const sheet = editor.context ? editor.context.sheetobj : null;
+  const cell = sheet && sheet.GetAssuredCell ? sheet.GetAssuredCell(coord) : null;
 
   // Hide the native input box and cancel its timer
   if (editor.inputBox) {
@@ -442,25 +465,35 @@ function triggerCustomModal(editor) {
 
   // Determine initial text
   let initialText = "";
-  if (cell.datavalue !== undefined && cell.datavalue !== null) {
-    initialText = String(cell.datavalue);
-  } else if (cell.displaystring !== undefined && cell.displaystring !== null) {
-    initialText = String(cell.displaystring);
+  if (cell) {
+    if (cell.formula) {
+      initialText = "=" + cell.formula;
+    } else if (cell.datavalue !== undefined && cell.datavalue !== null) {
+      initialText = String(cell.datavalue);
+    } else if (cell.displaystring !== undefined && cell.displaystring !== null) {
+      initialText = String(cell.displaystring);
+    }
+  }
+  if (!initialText && SocialCalc && SocialCalc.GetCellContents && sheet) {
+    initialText = SocialCalc.GetCellContents(sheet, coord) || "";
   }
 
   // Callback when user confirms edit in Modal
   const handleOk = (newValue) => {
     let cmd = "";
-    const isNum = !isNaN(Number(newValue)) && newValue.trim() !== "";
-
-    if (isNum) {
-      cmd = `set ${coord} value n ${newValue}`;
+    if (typeof newValue === "string" && newValue.startsWith("=")) {
+      cmd = `set ${coord} formula ${newValue.slice(1)}`;
     } else {
-      const isHtml = /<[a-z][\s\S]*>/i.test(newValue);
-      if (isHtml) {
-        cmd = `set ${coord} text th ${newValue}\nset ${coord} textvalueformat text-html`;
+      const isNum = !isNaN(Number(newValue)) && newValue.trim() !== "";
+      if (isNum) {
+        cmd = `set ${coord} value n ${newValue}`;
       } else {
-        cmd = `set ${coord} text t ${newValue}`;
+        const isHtml = /<[a-z][\s\S]*>/i.test(newValue);
+        if (isHtml) {
+          cmd = `set ${coord} text th ${newValue}\nset ${coord} textvalueformat text-html`;
+        } else {
+          cmd = `set ${coord} text t ${newValue}`;
+        }
       }
     }
 
@@ -527,5 +560,10 @@ export function setupCellChangeListener(callback) {
       window.SocialCalc.EditorSheetStatusCallback = origStatusCallback;
     }
   };
+}
+
+// Auto-initialize mouse listener if in browser environment
+if (typeof window !== "undefined") {
+  setupMouseListener();
 }
 

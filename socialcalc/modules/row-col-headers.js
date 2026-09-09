@@ -114,14 +114,17 @@ export function updateColumnResizeHandlePosition() {
 
   // 1. Try finding exact header cell from DOM for pixel-perfect coordinates
   if (editor.fullgrid) {
-    const cells = editor.fullgrid.querySelectorAll("td");
+    const cells = editor.fullgrid.querySelectorAll("td, th");
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i];
-      if (c.textContent && c.textContent.trim() === colLetter && c.className && typeof c.className === "string" && c.className.indexOf("colname") !== -1) {
+      const txt = c.textContent ? c.textContent.trim() : "";
+      if (txt === colLetter) {
         const rect = c.getBoundingClientRect();
-        colRight = Math.round(rect.right);
-        headerBottom = Math.round(rect.bottom);
-        break;
+        if (rect.width > 0 && rect.height > 0) {
+          colRight = Math.round(rect.right);
+          headerBottom = Math.round(rect.bottom);
+          break;
+        }
       }
     }
   }
@@ -151,8 +154,24 @@ export function updateColumnResizeHandlePosition() {
     handle = document.createElement("div");
     handle.id = "sc-col-resize-corner-handle";
     handle.className = "sc-col-resize-corner-handle";
+    handle.style.position = "fixed";
+    handle.style.zIndex = "99999";
+    handle.style.width = "24px";
+    handle.style.height = "24px";
+    handle.style.backgroundColor = "#2563eb";
+    handle.style.color = "#ffffff";
+    handle.style.borderRadius = "50%";
+    handle.style.border = "2px solid #ffffff";
+    handle.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35)";
+    handle.style.display = "flex";
+    handle.style.alignItems = "center";
+    handle.style.justifyContent = "center";
+    handle.style.cursor = "col-resize";
+    handle.style.touchAction = "none";
+    handle.style.transform = "translate(-50%, -50%)";
+    handle.style.pointerEvents = "auto";
     handle.innerHTML = `
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="8 4 4 8 8 12"></polyline>
         <polyline points="16 4 20 8 16 12"></polyline>
         <line x1="4" y1="8" x2="20" y2="8"></line>
@@ -497,8 +516,16 @@ export function isRowColHeadersEnabled() {
 
 // Window scroll and resize listeners to reposition the handle
 if (typeof window !== "undefined") {
+  SocialCalc = window.SocialCalc = window.SocialCalc || {};
+  SocialCalc.selectColumn = selectColumn;
+  SocialCalc.selectRow = selectRow;
+  SocialCalc.showColumnResizeHandle = showColumnResizeHandle;
+  SocialCalc.hideColumnResizeHandle = hideColumnResizeHandle;
+  SocialCalc.updateColumnResizeHandlePosition = updateColumnResizeHandlePosition;
+
   window.addEventListener("resize", updateColumnResizeHandlePosition);
   window.addEventListener("socialcalc:horizontal-scroll", updateColumnResizeHandlePosition);
+  window.addEventListener("socialcalc:scroll", updateColumnResizeHandlePosition);
 }
 
 // Register as a plugin in the plugin manager

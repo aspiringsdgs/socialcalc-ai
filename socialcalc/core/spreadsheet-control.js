@@ -7014,8 +7014,13 @@ SocialCalc.SpreadsheetCmdTable = {
   // this is for checkmark toggling
   SocialCalc.Callbacks.ToggleCell = function (cellname) {
     var control = SocialCalc.GetCurrentWorkBookControl();
+    if (!control || !control.currentSheetButton || !control.workbook || !control.workbook.sheetArr) {
+      return;
+    }
     var sheetid = control.currentSheetButton.id;
+    if (!control.workbook.sheetArr[sheetid]) return;
     var sheetobj = control.workbook.sheetArr[sheetid].sheet;
+    if (!sheetobj || !sheetobj.cells) return;
     var cell = sheetobj.cells[cellname];
     var sheetname = sheetobj.sheetname;
 

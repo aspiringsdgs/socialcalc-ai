@@ -5186,6 +5186,7 @@
         if (context.showRCHeaders) {
             newcol = document.createElement("col");
             newcol.width = context.rownamewidth;
+            newcol.style.width = context.rownamewidth + "px";
             result.appendChild(newcol);
         }
 
@@ -5197,12 +5198,16 @@
             ) {
                 newcol = document.createElement("col");
                 t = context.colwidth[colnum];
-                if (t) newcol.width = t;
+                if (t) {
+                    newcol.width = t;
+                    newcol.style.width = t + "px";
+                }
                 result.appendChild(newcol);
             }
             if (colpane < context.colpanes.length - 1) {
                 newcol = document.createElement("col");
                 newcol.width = context.defaultpanedividerwidth;
+                newcol.style.width = context.defaultpanedividerwidth + "px";
                 result.appendChild(newcol);
             }
         }
@@ -5218,6 +5223,8 @@
         if (context.showRCHeaders) {
             newcell = document.createElement("td");
             newcell.style.width = context.rownamewidth + "px";
+            newcell.style.minWidth = context.rownamewidth + "px";
+            newcell.style.maxWidth = context.rownamewidth + "px";
             newcell.height = "1";
             result.appendChild(newcell);
         }
@@ -5230,13 +5237,21 @@
             ) {
                 newcell = document.createElement("td");
                 t = context.colwidth[colnum];
-                if (t) newcell.width = t;
+                if (t) {
+                    newcell.width = t;
+                    newcell.style.width = t + "px";
+                    newcell.style.minWidth = t + "px";
+                    newcell.style.maxWidth = t + "px";
+                }
                 newcell.height = "1";
                 result.appendChild(newcell);
             }
             if (colpane < context.colpanes.length - 1) {
                 newcell = document.createElement("td");
                 newcell.width = context.defaultpanedividerwidth;
+                newcell.style.width = context.defaultpanedividerwidth + "px";
+                newcell.style.minWidth = context.defaultpanedividerwidth + "px";
+                newcell.style.maxWidth = context.defaultpanedividerwidth + "px";
                 newcell.height = "1";
                 result.appendChild(newcell);
             }
@@ -5289,8 +5304,8 @@
                 if (rownum === firstVisibleRow && colnum === firstVisibleCol) {
                     // This is the visible start of the scrolled spanned cell in this pane!
                     isSpanContinuation = true;
-                    spanColSpan = Math.min(spanEndCol, panecollimits ? panecollimits.last : spanEndCol) - firstVisibleCol + 1;
-                    spanRowSpan = Math.min(spanEndRow, panerowlimits ? panerowlimits.last : spanEndRow) - firstVisibleRow + 1;
+                    spanColSpan = Math.max(1, Math.min(spanEndCol, panecollimits ? panecollimits.last : spanEndCol) - firstVisibleCol + 1);
+                    spanRowSpan = Math.max(1, Math.min(spanEndRow, panerowlimits ? panerowlimits.last : spanEndRow) - firstVisibleRow + 1);
                     cell = originCell;
                 } else {
                     // Covered by the visible span in this pane -- skip
@@ -5416,6 +5431,9 @@
             } else stylestr += "text-align:left;";
         }
 
+        var activeColSpan = isSpanContinuation ? spanColSpan : (result.colSpan || cell.colspan || 1);
+        var activeRowSpan = isSpanContinuation ? spanRowSpan : (result.rowSpan || cell.rowspan || 1);
+
         num = cell.bt;
         if (num && (!isSpanContinuation || (originCR && rownum === originCR.row))) {
             stylestr += "border-top:" + sheetobj.borderstyles[num] + ";";
@@ -5428,12 +5446,12 @@
             if (
                 context.CellInPane(
                     rownum,
-                    colnum + (isSpanContinuation ? spanColSpan : (cell.colspan || 1)),
+                    colnum + activeColSpan,
                     rowpane,
                     colpane
                 )
             )
-                t = SocialCalc.crToCoord(colnum + (isSpanContinuation ? spanColSpan : (cell.colspan || 1)), rownum);
+                t = SocialCalc.crToCoord(colnum + activeColSpan, rownum);
             else t = "nomatch";
             if (context.cellskip[t]) t = context.cellskip[t];
             if (!sheetobj.cells[t] || !sheetobj.cells[t].bl)
@@ -5446,13 +5464,13 @@
         } else if (context.showGrid) {
             if (
                 context.CellInPane(
-                    rownum + (isSpanContinuation ? spanRowSpan : (cell.rowspan || 1)),
+                    rownum + activeRowSpan,
                     colnum,
                     rowpane,
                     colpane
                 )
             )
-                t = SocialCalc.crToCoord(colnum, rownum + (isSpanContinuation ? spanRowSpan : (cell.rowspan || 1)));
+                t = SocialCalc.crToCoord(colnum, rownum + activeRowSpan);
             else t = "nomatch";
             if (context.cellskip[t]) t = context.cellskip[t];
             if (!sheetobj.cells[t] || !sheetobj.cells[t].bt)
@@ -5483,6 +5501,8 @@
         }
 
         result.style.cssText = stylestr;
+        result.style.boxSizing = "border-box";
+        result.style.overflow = "hidden";
 
         //!!!!!!!!!
         // NOTE: csss and cssc are not supported yet.

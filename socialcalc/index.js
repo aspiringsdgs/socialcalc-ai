@@ -34,9 +34,10 @@ export * from "./modules/row-col-headers.js";
 export * from "./modules/horizontal-scroll.js";
 export * from "./modules/grid-lines.js";
 export * from "./modules/editable-cells.js";
+export * from "./modules/invoice.js";
 export { HorizontalScrollBar } from "./components/HorizontalScrollBar.tsx";
 export { CellEditModal, FONT_COLORS, BG_COLORS } from "./components/CellEditModal/CellEditModal.tsx";
 export { RowActionPopover } from "./components/RowActionPopover/RowActionPopover.tsx";
 export { EditableCellsModal, parseAppMappingToItems } from "./components/EditableCellsModal/EditableCellsModal.tsx";
 export { DemoVideosModal, FORMULA_GUIDES } from "./components/DemoVideosModal/DemoVideosModal.tsx";
-
+export { compressImage } from "./utils/imageCompressor.ts";

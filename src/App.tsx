@@ -233,7 +233,7 @@ const App: React.FC = () => {
         AppGeneral.setAppMapping((template100001 as any).appMapping);
       }
 
-      // Enable row & column headers (123 / ABCD) by default
+      // Enable plugins by default (headers, gridlines, touch scroll, cell edit modal)
       setTimeout(() => {
         try {
           if (AppGeneral.enableRowColHeaders) {
@@ -247,6 +247,13 @@ const App: React.FC = () => {
           if (AppGeneral.initTouchScroll) {
             AppGeneral.initTouchScroll();
             setTouchScrollActive(true);
+          }
+          if (AppGeneral.enableCellEditModal) {
+            AppGeneral.enableCellEditModal();
+            setCellEditModalActive(true);
+          }
+          if (AppGeneral.setupMouseListener) {
+            AppGeneral.setupMouseListener();
           }
         } catch (e) {
           console.warn("Plugin initial enable caught:", e);
@@ -628,7 +635,7 @@ const App: React.FC = () => {
         </IonToolbar>
       </IonHeader>
 
-      <IonContent fullscreen>
+      <IonContent fullscreen scrollY={false} scrollX={false}>
         {/* SocialCalc mounting targets */}
         <div id="container">
           <div id="workbookControl"></div>

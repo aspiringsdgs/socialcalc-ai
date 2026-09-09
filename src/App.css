@@ -2,8 +2,11 @@
 #container {
   width: 100%;
   height: calc(100vh - 110px);
-  overflow: hidden;
+  overflow: hidden !important;
   position: relative;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
 #workbookControl {
@@ -13,10 +16,76 @@
 #tableeditor {
   width: 100%;
   height: 100%;
+  overflow: hidden !important;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 #te_griddiv {
-  overflow: auto !important;
+  overflow: hidden !important;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
+ion-content {
+  --overflow: hidden;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+/* Column resize corner handle icon & indicators */
+.sc-col-resize-corner-handle {
+  position: fixed !important;
+  z-index: 99999 !important;
+  width: 24px !important;
+  height: 24px !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-radius: 50% !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: col-resize !important;
+  touch-action: none !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: background 0.15s ease, transform 0.1s ease !important;
+}
+
+.sc-col-resize-corner-handle:hover,
+.sc-col-resize-corner-handle:active {
+  background: #1d4ed8 !important;
+  transform: translate(-50%, -50%) scale(1.2) !important;
+}
+
+.sc-col-resize-guide {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #2563eb;
+  z-index: 99998;
+  pointer-events: none;
+}
+
+.sc-col-resize-tooltip {
+  position: fixed;
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 99999;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
 }
 
 /* Template Selector in Top Toolbar */

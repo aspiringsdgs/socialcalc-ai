@@ -24,34 +24,76 @@ export const DOC_CATEGORIES = [
 
 export const DOCS_DATA: DocChapter[] = [
   {
+    id: "installation",
+    category: "Getting Started",
+    title: "Installation & Package Setup",
+    description: "Install socialcalc-ai via npm, yarn, pnpm, or bun with optional peer dependencies.",
+    badge: "npm v1.0.1",
+    content: `
+### Installing SocialCalc AI
+
+**socialcalc-ai** is published on the official npm registry. You can install it into any modern web or mobile project using your package manager of choice:
+
+\`\`\`bash
+# Using npm
+npm install socialcalc-ai
+
+# Using Yarn
+yarn add socialcalc-ai
+
+# Using pnpm
+pnpm add socialcalc-ai
+
+# Using Bun
+bun add socialcalc-ai
+\`\`\`
+
+#### Peer Dependencies (UI Components):
+If you use the built-in React & Ionic UI components (\`CellEditModal\`, \`HorizontalScrollBar\`, \`RowActionPopover\`, \`EditableCellsModal\`), ensure peer dependencies are installed in your host app:
+
+\`\`\`bash
+npm install react react-dom @ionic/react ionicons
+\`\`\`
+
+> 💡 **Headless / Vanilla JS**: Peer dependencies are completely optional if you are consuming the core spreadsheet calculation engine or plugins in pure JavaScript, Node.js, or non-React web apps.
+    `,
+    codeSnippet: {
+      language: "bash",
+      code: `# Install the published npm package
+npm install socialcalc-ai
+
+# Optional: React & Ionic peer dependencies for UI controls
+npm install react react-dom @ionic/react ionicons`,
+    },
+  },
+  {
     id: "introduction",
     category: "Getting Started",
-    title: "Introduction to SocialCalc Modernized",
+    title: "Introduction to SocialCalc AI",
     description: "Overview of the modernized standalone SocialCalc spreadsheet engine and its ecosystem.",
-    badge: "v2.0",
+    badge: "Live on npm",
     content: `
-### What is SocialCalc Modernized?
+### What is SocialCalc AI?
 
-**SocialCalc Modernized** is an ultra-fast, zero-heavy-dependency spreadsheet engine and modular plugin suite engineered for modern **React**, **Ionic**, and **Vanilla JavaScript** applications.
+**SocialCalc AI** (\`socialcalc-ai\`) is an ultra-fast, zero-heavy-dependency spreadsheet engine and modular plugin suite engineered for modern **React**, **Ionic**, **Vanilla JavaScript**, and **AI-driven** applications.
 
 Originally developed by Dan Bricklin (the co-creator of VisiCalc), SocialCalc delivers enterprise-grade cell evaluation, formula parsing, and multi-sheet calculation within a compact footprint.
 
 #### Key Highlights:
-- **Standalone Package Architecture**: The engine lives in an independent \`./socialcalc\` package consumed by web apps, hybrid mobile apps (iOS & Android), and backend services without tight coupling.
+- **Standalone npm Package**: Published as \`socialcalc-ai\` with ES6 module exports, full TypeScript typings (\`index.d.ts\`), and zero global namespace pollution.
 - **Modular Plugin Architecture**: Features like Dynamic Grid Lines, Mobile Momentum Touch-Scroll, Row/Column Headers, and Cell Permissions are decoupled plugins registered via a unified \`PluginManager\`.
 - **Pre-Built Ionic & React Components**: Ready-to-use modern UI modules including \`CellEditModal\`, \`HorizontalScrollBar\`, \`RowActionPopover\`, and \`EditableCellsModal\`.
-- **Standard MSC JSON Support**: Natively loads, parses, and serializes multi-sheet workbooks conforming to the canonical SocialCalc MSC JSON schema.
+- **Standard MSC JSON Support**: Natively loads, parses, and serializes multi-sheet workbooks conforming to the canonical SocialCalc MSC JSON schema, ideal for LLM spreadsheet generation pipelines.
 - **Bi-directional Theme Support**: First-class support for both high-contrast Light Mode and midnight Dark Mode.
     `,
     codeSnippet: {
       language: "bash",
-      code: `# Quick Installation & Verification in your application
-npm install socialcalc
+      code: `# Quick Installation from npm
+npm install socialcalc-ai
 
 # Run tests and bundle verification
 npm test -- --run
-npm run build
-node test-socialcalc.js`,
+npm run build`,
     },
   },
   {
@@ -65,15 +107,16 @@ node test-socialcalc.js`,
 SocialCalc can be mounted into any HTML container element (\`div\`) with just a few lines of code.
 
 #### Initialization Steps:
-1. Create a container element with an explicit ID in your component JSX.
-2. Initialize the workbook using \`SocialCalc.InitializeSpreadsheetControl(containerId)\`.
-3. Load workbook data using standard MSC JSON or raw SocialCalc save strings.
-4. Enable desired plugins such as grid lines, touch scroll, and header controls.
+1. Install the package via \`npm install socialcalc-ai\`.
+2. Create a container element with an explicit ID in your component JSX.
+3. Initialize the workbook using \`AppGeneral.initializeApp(initialMSC)\`.
+4. Load workbook data using standard MSC JSON or raw SocialCalc save strings.
+5. Enable desired plugins such as grid lines, touch scroll, and header controls.
     `,
     codeSnippet: {
       language: "tsx",
       code: `import React, { useEffect, useRef } from "react";
-import * as AppGeneral from "socialcalc";
+import * as AppGeneral from "socialcalc-ai";
 import template100001 from "./data/100001.json";
 
 export const SpreadsheetView: React.FC = () => {
@@ -81,7 +124,7 @@ export const SpreadsheetView: React.FC = () => {
 
   useEffect(() => {
     // 1. Initialize DOM editor
-    const spreadsheet = AppGeneral.InitializeSpreadsheetControl("tableeditor");
+    AppGeneral.initializeApp("");
 
     // 2. Load standard MSC template data
     if (template100001.msc) {
@@ -224,7 +267,7 @@ Plugins can be enabled, disabled, or toggled on demand without altering core spr
     `,
     codeSnippet: {
       language: "javascript",
-      code: `import * as AppGeneral from "socialcalc";
+      code: `import * as AppGeneral from "socialcalc-ai";
 
 // Controlling plugins programmatically:
 AppGeneral.enableGridLines();
@@ -281,7 +324,7 @@ Template permission editor for configuring which cells end-users are allowed to 
     codeSnippet: {
       language: "tsx",
       code: `import React, { useState } from "react";
-import { CellEditModal, HorizontalScrollBar, RowActionPopover } from "socialcalc";
+import { CellEditModal, HorizontalScrollBar, RowActionPopover } from "socialcalc-ai";
 
 export const EditorOverlay: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -347,7 +390,7 @@ The standard MSC JSON format allows entire multi-sheet workbooks, styling, formu
     `,
     codeSnippet: {
       language: "javascript",
-      code: `import * as AppGeneral from "socialcalc";
+      code: `import * as AppGeneral from "socialcalc-ai";
 import templateData from "./public/data/100001.json";
 
 // Loading standard MSC JSON into the active editor:

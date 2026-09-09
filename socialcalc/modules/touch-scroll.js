@@ -108,8 +108,8 @@ function getEditor() {
 
 function editorCanScroll(editor) {
     if (!editor) return false;
-    if (editor.busy) return false;
-    if (editor.state !== "start") return false;
+    // Do not block touch scrolling during micro-renders or position steps
+    if (editor.busy && editor.busy !== true && editor.busy !== "render") return false;
     return true;
 }
 
@@ -175,13 +175,15 @@ function doScroll(editor, rowDelta, colDelta) {
 // ─── Replacement Touch Handlers ──────────────────────────────────────────────
 
 function handleTouchStart(event) {
-    // Only handle single-finger touches
-    if (event.touches.length !== 1) return;
-
-    const touch = event.touches[0];
-
     // Cancel any running momentum
     cancelMomentum();
+
+    // Prevent default browser multi-touch behaviors (pinch-to-zoom, 2-finger page drag)
+    if (event.touches.length > 1) {
+        if (event.cancelable) event.preventDefault();
+    }
+
+    const touch = event.touches[0];
 
     _gesture.active = true;
     _gesture.isScrolling = false;
@@ -193,41 +195,36 @@ function handleTouchStart(event) {
     _gesture.colDebt = 0;
     _gesture.velocitySamples = [];
     _gesture.startTime = performance.now();
-
-    // Do NOT call preventDefault here — we decide in touchmove whether this
-    // is a scroll or a tap. If it's a tap we want the event to flow normally.
+    _gesture.initialTouchCount = event.touches.length;
 }
 
 function handleTouchMove(event) {
-    if (!_gesture.active) return;
-    if (event.touches.length !== 1) return;
+    // CRITICAL: Always prevent default native browser scroll / container pan on the sheet
+    // so the entire outer sheet box is NEVER dragged or moved in any direction
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation();
+
+    if (!_gesture.active || !event.touches.length) return;
 
     const touch = event.touches[0];
-    const dx = _gesture.lastX - touch.pageX;   // positive = finger moved left  (scroll right)
     const dy = _gesture.lastY - touch.pageY;   // positive = finger moved up    (scroll down)
 
     // Check deadzone (only once per gesture)
     if (!_gesture.isScrolling) {
-        const totalDX = Math.abs(touch.pageX - _gesture.startX);
         const totalDY = Math.abs(touch.pageY - _gesture.startY);
-        if (totalDX < TOUCH_SCROLL_CONFIG.scrollDeadzone &&
-            totalDY < TOUCH_SCROLL_CONFIG.scrollDeadzone) {
+        if (totalDY < TOUCH_SCROLL_CONFIG.scrollDeadzone) {
             return; // still within deadzone — not scrolling yet
         }
         _gesture.isScrolling = true;
     }
 
-    // Prevent native scroll / browser actions once we own the gesture
-    if (event.cancelable) event.preventDefault();
-    event.stopPropagation();
-
-    // Track velocity (raw pixels)
+    // Track velocity (raw pixels, vertical only)
     addVelocitySample(0, dy);
 
-    // Accumulate fractional row debt (vertical only)
+    // Accumulate fractional row debt (strictly vertical)
     _gesture.rowDebt += dy / TOUCH_SCROLL_CONFIG.pixelsPerRow;
 
-    // Scroll integer rows (strictly vertical)
+    // Scroll integer rows (strictly vertical - colStep is always 0)
     const rowStep = Math.trunc(_gesture.rowDebt);
 
     if (rowStep !== 0) {
@@ -244,12 +241,21 @@ function handleTouchMove(event) {
 
 function handleTouchEnd(event) {
     if (!_gesture.active) return;
+
+    // If fingers still remain on screen, don't end gesture yet
+    if (event.touches && event.touches.length > 0) {
+        const touch = event.touches[0];
+        _gesture.lastX = touch.pageX;
+        _gesture.lastY = touch.pageY;
+        return;
+    }
+
     _gesture.active = false;
 
     const elapsed = performance.now() - _gesture.startTime;
 
-    // If we never crossed the deadzone, treat as a tap
-    if (!_gesture.isScrolling) {
+    // If we never crossed the deadzone and started with exactly 1 finger, treat as a tap
+    if (!_gesture.isScrolling && _gesture.initialTouchCount === 1) {
         handleTap(event, elapsed);
         return;
     }
@@ -308,6 +314,51 @@ function handleTouchCancel() {
 function handleTap(event, elapsed) {
     const now = performance.now();
     const touchinfo = SocialCalc.TouchInfo;
+    const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]);
+
+    // Check if user tapped a column header, row header, or resize handle
+    if (touch && typeof document !== "undefined") {
+        const tappedEl = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (tappedEl) {
+            // If tapped the resize handle itself, let drag handler take care of it
+            if (tappedEl.id === "sc-col-resize-corner-handle" || (tappedEl.closest && tappedEl.closest("#sc-col-resize-corner-handle"))) {
+                return;
+            }
+
+            // Check for Column or Row Header Cell
+            let headerTd = tappedEl;
+            while (headerTd && headerTd.tagName !== "TD" && headerTd.tagName !== "TH" && headerTd !== document.body) {
+                headerTd = headerTd.parentNode;
+            }
+            if (headerTd && (headerTd.tagName === "TD" || headerTd.tagName === "TH")) {
+                const txt = headerTd.textContent ? headerTd.textContent.trim().toUpperCase() : "";
+                if (/^[A-Z]{1,2}$/.test(txt)) {
+                    let colNum = 0;
+                    for (let i = 0; i < txt.length; i++) {
+                        colNum = colNum * 26 + (txt.charCodeAt(i) - 64);
+                    }
+                    if (colNum > 0 && SocialCalc.selectColumn) {
+                        SocialCalc.selectColumn(colNum);
+                        return;
+                    }
+                } else if (/^[0-9]+$/.test(txt)) {
+                    const rowNum = parseInt(txt, 10);
+                    if (rowNum > 0 && SocialCalc.selectRow) {
+                        SocialCalc.selectRow(rowNum);
+                        window.dispatchEvent(new CustomEvent("socialcalc:row-header-click", {
+                            detail: {
+                                rowNum: rowNum,
+                                clientX: touch.clientX,
+                                clientY: touch.clientY
+                            }
+                        }));
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
     const wobj = SocialCalc.FindTouchElement
         ? SocialCalc.FindTouchElement(event)
         : null;
@@ -387,11 +438,23 @@ export function enableTouchScroll() {
             el.removeEventListener("touchstart", _origProcessTouchStart, true);
             el.removeEventListener("touchmove", _origProcessTouchMove, true);
 
-            // Add new listeners — touchmove must be non-passive so we can preventDefault
-            el.addEventListener("touchstart", handleTouchStart, { passive: true });
+            // Add new listeners — both touchstart and touchmove non-passive so we can preventDefault
+            el.addEventListener("touchstart", handleTouchStart, { passive: false });
             el.addEventListener("touchmove", handleTouchMove, { passive: false });
             el.addEventListener("touchend", handleTouchEnd, { passive: true });
             el.addEventListener("touchcancel", handleTouchCancel, { passive: true });
+        }
+    }
+
+    // Lock outer containers against native touch dragging / pan
+    const outerCandidates = ["container", "tableeditor", "te_griddiv"];
+    for (const cid of outerCandidates) {
+        const cel = document.getElementById(cid);
+        if (cel && !cel.__touchLocked) {
+            cel.__touchLocked = true;
+            cel.addEventListener("touchmove", (e) => {
+                if (e.cancelable) e.preventDefault();
+            }, { passive: false });
         }
     }
 

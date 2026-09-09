@@ -1,16 +1,67 @@
 {
-  "name": "socialcalc",
-  "version": "1.0.0",
-  "description": "socialcalc npm module",
+  "name": "socialcalc-ai",
+  "version": "1.0.2",
+  "description": "Modernized, modular spreadsheet calculation engine and React/Ionic UI suite with AI formula and template capabilities.",
+  "type": "module",
   "main": "index.js",
+  "module": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "core",
+    "modules",
+    "components",
+    "utils",
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "!**/*.test.ts",
+    "!**/*.test.js",
+    "!**/*.spec.ts",
+    "!**/*.spec.js"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run"
   },
   "keywords": [
     "socialcalc",
+    "socialcalc-ai",
     "spreadsheet",
-    "javascript"
+    "react-spreadsheet",
+    "ionic-spreadsheet",
+    "excel",
+    "sheets",
+    "calc",
+    "formula",
+    "msc"
   ],
-  "author": "aspiring investments",
-  "license": "MIT"
+  "author": "Anirudh Sharma",
+  "license": "MIT",
+  "peerDependencies": {
+    "@ionic/react": ">=7.0.0",
+    "ionicons": ">=7.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ionic/react": {
+      "optional": true
+    },
+    "ionicons": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
 }

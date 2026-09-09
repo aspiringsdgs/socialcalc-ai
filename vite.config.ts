@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       socialcalc: path.resolve(__dirname, "./socialcalc"),
+      "socialcalc-ai": path.resolve(__dirname, "./socialcalc"),
     },
   },
 

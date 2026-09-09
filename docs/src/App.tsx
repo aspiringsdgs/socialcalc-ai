@@ -220,7 +220,7 @@ export const App: React.FC = () => {
           <div className="brand-icon">
             <Grid3X3 size={16} />
           </div>
-          <span className="brand-title">SocialCalc</span>
+          <span className="brand-title">SocialCalc AI</span>
         </div>
 
         <div className="navbar-actions">
@@ -234,6 +234,18 @@ export const App: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
+          <a
+            href="https://www.npmjs.com/package/socialcalc-ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="npm-launch-btn"
+            title="View socialcalc-ai on npm"
+          >
+            <span className="npm-badge-pill">npm</span>
+            <span>v1.0.1</span>
+            <ExternalLink size={12} />
+          </a>
 
           <button
             className="icon-btn"

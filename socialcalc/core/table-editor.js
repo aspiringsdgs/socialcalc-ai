@@ -1582,22 +1582,33 @@
             mouseinfo.registeredElements.push({ element: element, editor: editor });
         }
 
+        if (!SocialCalc.ProcessEditorMouseDownHandler) {
+            SocialCalc.ProcessEditorMouseDownHandler = function (e) {
+                return SocialCalc.ProcessEditorMouseDown(e);
+            };
+        }
+        if (!SocialCalc.ProcessEditorDblClickHandler) {
+            SocialCalc.ProcessEditorDblClickHandler = function (e) {
+                return SocialCalc.ProcessEditorDblClick(e);
+            };
+        }
+
         if (element.addEventListener) {
             // DOM Level 2 -- Firefox, et al
             element.addEventListener(
                 "mousedown",
-                SocialCalc.ProcessEditorMouseDown,
+                SocialCalc.ProcessEditorMouseDownHandler,
                 false
             );
             element.addEventListener(
                 "dblclick",
-                SocialCalc.ProcessEditorDblClick,
+                SocialCalc.ProcessEditorDblClickHandler,
                 false
             );
         } else if (element.attachEvent) {
             // IE 5+
-            element.attachEvent("onmousedown", SocialCalc.ProcessEditorMouseDown);
-            element.attachEvent("ondblclick", SocialCalc.ProcessEditorDblClick);
+            element.attachEvent("onmousedown", SocialCalc.ProcessEditorMouseDownHandler);
+            element.attachEvent("ondblclick", SocialCalc.ProcessEditorDblClickHandler);
         } else {
             // don't handle this
             throw "Browser not supported";
@@ -1629,21 +1640,21 @@
                 // DOM Level 2
                 oldelement.removeEventListener(
                     "mousedown",
-                    SocialCalc.ProcessEditorMouseDown,
+                    SocialCalc.ProcessEditorMouseDownHandler || SocialCalc.ProcessEditorMouseDown,
                     false
                 );
                 oldelement.removeEventListener(
                     "dblclick",
-                    SocialCalc.ProcessEditorDblClick,
+                    SocialCalc.ProcessEditorDblClickHandler || SocialCalc.ProcessEditorDblClick,
                     false
                 );
             } else if (oldelement.detachEvent) {
                 // IE
                 oldelement.detachEvent(
                     "onmousedown",
-                    SocialCalc.ProcessEditorMouseDown
+                    SocialCalc.ProcessEditorMouseDownHandler || SocialCalc.ProcessEditorMouseDown
                 );
-                oldelement.detachEvent("ondblclick", SocialCalc.ProcessEditorDblClick);
+                oldelement.detachEvent("ondblclick", SocialCalc.ProcessEditorDblClickHandler || SocialCalc.ProcessEditorDblClick);
             }
             mouseinfo.registeredElements.splice(i, 1);
         }
@@ -3772,20 +3783,23 @@
             return;
         }
 
-        if ((vamount == 1 || vamount == -1) && hamount == 0) {
-            // special case quick scrolls
-            if (vamount == 1) {
-                editor.ScrollTableUpOneRow();
-            } else {
-                editor.ScrollTableDownOneRow();
+        // Fast micro-DOM update for 1-4 row vertical scrolls (smooth touch & momentum)
+        if (hamount == 0 && Math.abs(vamount) >= 1 && Math.abs(vamount) <= 4) {
+            var stepDir = vamount > 0 ? 1 : -1;
+            var steps = Math.abs(vamount);
+            for (var s = 0; s < steps; s++) {
+                if (stepDir > 0) {
+                    editor.ScrollTableUpOneRow();
+                } else {
+                    editor.ScrollTableDownOneRow();
+                }
             }
             if (editor.ecell) editor.SetECellHeaders("selected");
             editor.SchedulePositionCalculations();
             return;
         }
 
-        // Do a gross move and render
-
+        // Do a gross move and render for large jumps or horizontal scrolls
         if (vamount != 0 || hamount != 0) {
             context.rowpanes[vplen - 1].first += vamount;
             context.rowpanes[vplen - 1].last += vamount;
@@ -3892,9 +3906,8 @@
         var sheetobj = context.sheetobj;
         var tableobj = editor.fullgrid;
 
-        var tbodyobj;
-
-        tbodyobj = tableobj.lastChild;
+        var tbodyobj = tableobj.lastChild;
+        if (!tbodyobj || !tbodyobj.childNodes) return editor.fullgrid;
 
         toprow = context.showRCHeaders ? 2 : 1;
         for (rowpane = 0; rowpane < context.rowpanes.length - 1; rowpane++) {
@@ -3902,18 +3915,20 @@
                 context.rowpanes[rowpane].last - context.rowpanes[rowpane].first + 2; // skip pane and spacing row
         }
 
+        if (toprow >= tbodyobj.childNodes.length) return editor.fullgrid;
         tbodyobj.removeChild(tbodyobj.childNodes[toprow]);
 
         context.rowpanes[rowpane].first++;
         context.rowpanes[rowpane].last++;
         editor.FitToEditTable();
-        context.CalculateColWidthData(); // Just in case, since normally done in RenderSheet
+        context.CalculateColWidthData();
 
         newbottomrow = context.RenderRow(context.rowpanes[rowpane].last, rowpane);
-        tbodyobj.appendChild(newbottomrow);
+        if (newbottomrow) {
+            tbodyobj.appendChild(newbottomrow);
+        }
 
-        // if scrolled off a row with starting rowspans, replace rows for the largest rowspan
-
+        // If scrolled off a row with starting rowspans OR continuation spans, refresh rows for largest span
         var maxrowspan = 1;
         oldrownum = context.rowpanes[rowpane].first - 1;
 
@@ -3924,7 +3939,17 @@
                 colnum++
             ) {
                 var coord = SocialCalc.crToCoord(colnum, oldrownum);
-                if (context.cellskip[coord]) continue;
+                if (context.cellskip && context.cellskip[coord]) {
+                    // Cell was covered by a span starting above oldrownum
+                    var originCoord = context.cellskip[coord];
+                    var originCell = sheetobj.cells[originCoord];
+                    var originCR = context.coordToCR ? context.coordToCR[originCoord] : null;
+                    if (originCell && originCR) {
+                        var remainingSpan = (originCR.row - 0 + originCell.rowspan) - oldrownum;
+                        if (remainingSpan > maxrowspan) maxrowspan = remainingSpan;
+                    }
+                    continue;
+                }
                 cell = sheetobj.cells[coord];
                 if (cell && cell.rowspan > maxrowspan) maxrowspan = cell.rowspan;
             }
@@ -3932,15 +3957,17 @@
 
         if (maxrowspan > 1) {
             for (rownum = 1; rownum < maxrowspan; rownum++) {
-                if (rownum + oldrownum >= context.rowpanes[rowpane].last) break;
-                newrow = context.RenderRow(rownum + oldrownum, rowpane);
+                var targetRow = rownum + oldrownum;
+                if (targetRow > context.rowpanes[rowpane].last) break;
+                newrow = context.RenderRow(targetRow, rowpane);
                 oldchild = tbodyobj.childNodes[toprow + rownum - 1];
-                tbodyobj.replaceChild(newrow, oldchild);
+                if (oldchild && newrow) {
+                    tbodyobj.replaceChild(newrow, oldchild);
+                }
             }
         }
 
-        // if added a row that includes rowspans from above, update the size of those to include new row
-
+        // If added bottom row includes rowspans from above, update the size of those to include new row
         bottomrownum = context.rowpanes[rowpane].last;
 
         for (colpane = 0; colpane < context.colpanes.length; colpane++) {
@@ -3949,26 +3976,31 @@
                 colnum <= context.colpanes[colpane].last;
                 colnum++
             ) {
+                if (!context.cellskip) continue;
                 coord = context.cellskip[SocialCalc.crToCoord(colnum, bottomrownum)];
-                if (!coord) continue; // only look at spanned cells
-                rownum = context.coordToCR[coord].row - 0;
+                if (!coord) continue;
+                rownum = context.coordToCR ? (context.coordToCR[coord].row - 0) : null;
                 if (
+                    rownum === null ||
                     rownum == context.rowpanes[rowpane].last ||
                     rownum < context.rowpanes[rowpane].first
-                )
-                    continue; // this row (colspan) or starts above pane
+                ) {
+                    continue;
+                }
                 cell = sheetobj.cells[coord];
-                if (cell && cell.rowspan > 1) rowneedsrefresh[rownum] = true; // remember row num to update
+                if (cell && cell.rowspan > 1) rowneedsrefresh[rownum] = true;
             }
         }
 
         for (rownum in rowneedsrefresh) {
-            newrow = context.RenderRow(rownum, rowpane);
+            newrow = context.RenderRow(rownum - 0, rowpane);
             oldchild =
                 tbodyobj.childNodes[
                 toprow + (rownum - context.rowpanes[rowpane].first)
                 ];
-            tbodyobj.replaceChild(newrow, oldchild);
+            if (oldchild && newrow) {
+                tbodyobj.replaceChild(newrow, oldchild);
+            }
         }
 
         return tableobj;
@@ -3995,9 +4027,8 @@
         var sheetobj = context.sheetobj;
         var tableobj = editor.fullgrid;
 
-        var tbodyobj;
-
-        tbodyobj = tableobj.lastChild;
+        var tbodyobj = tableobj.lastChild;
+        if (!tbodyobj || !tbodyobj.childNodes) return editor.fullgrid;
 
         toprow = context.showRCHeaders ? 2 : 1;
         for (rowpane = 0; rowpane < context.rowpanes.length - 1; rowpane++) {
@@ -4005,23 +4036,24 @@
                 context.rowpanes[rowpane].last - context.rowpanes[rowpane].first + 2; // skip pane and spacing row
         }
 
-        tbodyobj.removeChild(
-            tbodyobj.childNodes[
-            toprow +
-            (context.rowpanes[rowpane].last - context.rowpanes[rowpane].first)
-            ]
-        );
+        var removeIdx = toprow + (context.rowpanes[rowpane].last - context.rowpanes[rowpane].first);
+        if (removeIdx < tbodyobj.childNodes.length) {
+            tbodyobj.removeChild(tbodyobj.childNodes[removeIdx]);
+        }
 
         context.rowpanes[rowpane].first--;
         context.rowpanes[rowpane].last--;
         editor.FitToEditTable();
-        context.CalculateColWidthData(); // Just in case, since normally done in RenderSheet
+        context.CalculateColWidthData();
 
         newrow = context.RenderRow(context.rowpanes[rowpane].first, rowpane);
-        tbodyobj.insertBefore(newrow, tbodyobj.childNodes[toprow]);
+        if (toprow < tbodyobj.childNodes.length) {
+            tbodyobj.insertBefore(newrow, tbodyobj.childNodes[toprow]);
+        } else {
+            tbodyobj.appendChild(newrow);
+        }
 
-        // if inserted a row with starting rowspans, replace rows for the largest rowspan
-
+        // If inserted a row with starting rowspans or continuation spans, refresh rows for largest span
         maxrowspan = 1;
         newrownum = context.rowpanes[rowpane].first;
 
@@ -4032,7 +4064,16 @@
                 colnum++
             ) {
                 coord = SocialCalc.crToCoord(colnum, newrownum);
-                if (context.cellskip[coord]) continue;
+                if (context.cellskip && context.cellskip[coord]) {
+                    var originCoord = context.cellskip[coord];
+                    var originCell = sheetobj.cells[originCoord];
+                    var originCR = context.coordToCR ? context.coordToCR[originCoord] : null;
+                    if (originCell && originCR) {
+                        var remaining = (originCR.row - 0 + originCell.rowspan) - newrownum;
+                        if (remaining > maxrowspan) maxrowspan = remaining;
+                    }
+                    continue;
+                }
                 cell = sheetobj.cells[coord];
                 if (cell && cell.rowspan > maxrowspan) maxrowspan = cell.rowspan;
             }
@@ -4040,15 +4081,17 @@
 
         if (maxrowspan > 1) {
             for (rownum = 1; rownum < maxrowspan; rownum++) {
-                if (rownum + newrownum > context.rowpanes[rowpane].last) break;
-                newrow = context.RenderRow(rownum + newrownum, rowpane);
+                var targetRow = rownum + newrownum;
+                if (targetRow > context.rowpanes[rowpane].last) break;
+                newrow = context.RenderRow(targetRow, rowpane);
                 oldchild = tbodyobj.childNodes[toprow + rownum];
-                tbodyobj.replaceChild(newrow, oldchild);
+                if (oldchild && newrow) {
+                    tbodyobj.replaceChild(newrow, oldchild);
+                }
             }
         }
 
-        // if last row now includes rowspans or rowspans from above, update the size of those to remove deleted row
-
+        // If last row now includes rowspans or rowspans from above, update the size of those to remove deleted row
         bottomrownum = context.rowpanes[rowpane].last;
 
         for (colpane = 0; colpane < context.colpanes.length; colpane++) {
@@ -4060,26 +4103,34 @@
                 coord = SocialCalc.crToCoord(colnum, bottomrownum);
                 cell = sheetobj.cells[coord];
                 if (cell && cell.rowspan > 1) {
-                    rowneedsrefresh[bottomrownum] = true; // need to update this row
+                    rowneedsrefresh[bottomrownum] = true;
                     continue;
                 }
+                if (!context.cellskip) continue;
                 coord = context.cellskip[SocialCalc.crToCoord(colnum, bottomrownum)];
-                if (!coord) continue; // only look at spanned cells
-                rownum = context.coordToCR[coord].row - 0;
-                if (rownum == bottomrownum || rownum < context.rowpanes[rowpane].first)
-                    continue; // this row (colspan) or starts above pane
+                if (!coord) continue;
+                rownum = context.coordToCR ? (context.coordToCR[coord].row - 0) : null;
+                if (
+                    rownum === null ||
+                    rownum == bottomrownum ||
+                    rownum < context.rowpanes[rowpane].first
+                ) {
+                    continue;
+                }
                 cell = sheetobj.cells[coord];
-                if (cell && cell.rowspan > 1) rowneedsrefresh[rownum] = true; // remember row num to update
+                if (cell && cell.rowspan > 1) rowneedsrefresh[rownum] = true;
             }
         }
 
         for (rownum in rowneedsrefresh) {
-            newrow = context.RenderRow(rownum, rowpane);
+            newrow = context.RenderRow(rownum - 0, rowpane);
             oldchild =
                 tbodyobj.childNodes[
                 toprow + (rownum - context.rowpanes[rowpane].first)
                 ];
-            tbodyobj.replaceChild(newrow, oldchild);
+            if (oldchild && newrow) {
+                tbodyobj.replaceChild(newrow, oldchild);
+            }
         }
 
         return tableobj;

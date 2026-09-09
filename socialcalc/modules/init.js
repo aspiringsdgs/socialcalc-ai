@@ -8,8 +8,9 @@ if (typeof window !== "undefined" && window.SocialCalc) {
   SocialCalc = global.SocialCalc;
 } else {
   console.error("SocialCalc not found in global scope");
-  SocialCalc = {}; // Fallback to prevent errors
 }
+
+import { setupMouseListener } from "./listeners.js";
 
 export function initializeApp(data) {
   /* Initializes the spreadsheet */
@@ -39,6 +40,7 @@ export function initializeApp(data) {
   }
 
   spreadsheet.InitializeSpreadsheetControl(tableeditor, 0, 0, 0);
+  SocialCalc._activeEditor = spreadsheet.editor;
   spreadsheet.ExecuteCommand("redisplay", "");
 
   // Determine which workbook control id exists (string passed to constructor)
@@ -91,4 +93,5 @@ export function initializeApp(data) {
   }
 
   spreadsheet.DoOnResize();
+  setupMouseListener();
 }
