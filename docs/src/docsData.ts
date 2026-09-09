@@ -28,7 +28,7 @@ export const DOCS_DATA: DocChapter[] = [
     category: "Getting Started",
     title: "Installation & Package Setup",
     description: "Install socialcalc-ai via npm, yarn, pnpm, or bun with optional peer dependencies.",
-    badge: "npm v1.0.1",
+    badge: "npm v1.0.3",
     content: `
 ### Installing SocialCalc AI
 

@@ -11,7 +11,7 @@
     } else {
         root.SocialCalcConstants = factory();
     }
-})(typeof self !== "undefined" ? self : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : (typeof self !== "undefined" ? self : this), function () {
 
     // Initialize SocialCalc namespace if not exists
     var SocialCalc;

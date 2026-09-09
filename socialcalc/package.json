@@ -1,6 +1,6 @@
 {
   "name": "socialcalc-ai",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Modernized, modular spreadsheet calculation engine and React/Ionic UI suite with AI formula and template capabilities.",
   "type": "module",
   "main": "index.js",

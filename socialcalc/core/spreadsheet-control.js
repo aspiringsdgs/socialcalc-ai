@@ -11,7 +11,7 @@
   } else {
     root.SocialCalcSpreadsheetControl = factory();
   }
-})(typeof self !== "undefined" ? self : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : (typeof self !== "undefined" ? self : this), function () {
 
   // Get SocialCalc namespace
   var SocialCalc;

@@ -532,6 +532,11 @@ import {
 
 ## 📦 Release Notes
 
+### v1.0.3
+- **Node.js ESM & Runtime Compatibility**: Enhanced UMD root resolution across all core modules to support `globalThis`, eliminating undefined root errors in Node.js ES module loaders.
+- **TypeScript Declarations**: Bundled official type declarations (`index.d.ts`) covering all core exports, plugin modules, and React/Ionic UI modal components.
+- **Packaging Refinements**: Added `.npmignore` to exclude test files, scratch scripts, and developer metadata from distributed tarballs.
+
 ### v1.0.2
 - **Cell Edit Modal Fix**: Fixed cell click interceptor and mouse delegates so clicking any cell reliably triggers the `CellEditModal` bottom sheet.
 - **Scroll Distortion Fix**: Resolved table border collapse and column misalignment when scrolling past multi-row (`rowspan`) and multi-column (`colspan`) blocks.
