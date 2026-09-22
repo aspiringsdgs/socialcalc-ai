@@ -5,20 +5,19 @@ import {
   resetCellFormatting,
 } from "./formatting.js";
 
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  console.error("SocialCalc not found in global scope");
-  SocialCalc = {}; // Fallback to prevent errors
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 export function saveAs() {
   return new Promise(function (resolve, reject) {
+    // Outside Cordova there is no navigator.notification; fall back to the browser prompt
+    if (typeof navigator === "undefined" || !navigator.notification || !navigator.notification.prompt) {
+      var name = typeof window !== "undefined" && window.prompt ? window.prompt("Please enter the filename", "") : null;
+      if (name) resolve(name);
+      return;
+    }
     navigator.notification.prompt(
       "Please enter the filename", // message
       function (results) {

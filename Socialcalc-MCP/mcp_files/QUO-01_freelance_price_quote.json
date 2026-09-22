@@ -1,0 +1,14 @@
+{
+  "numsheets": 1,
+  "currentid": "sheet1",
+  "currentname": "quote",
+  "sheetArr": {
+    "sheet1": {
+      "sheetstr": {
+        "savestr": "version:1.5\nfont:1:normal bold 10pt Arial\nfont:2:normal bold 14pt Arial\nfont:3:normal normal 9pt Arial\nfont:4:normal bold 11pt Arial\nfont:5:italic normal 9pt Arial\ncolor:1:#ffffff\ncolor:2:#4F46E5\ncolor:3:#EEF2FF\ncolor:4:#312E81\ncolor:5:#F8FAFC\ncolor:6:#DC2626\ncolor:7:#64748B\nborder:1:1px solid rgb(203,213,225)\nborder:2:2px solid rgb(79,70,229)\ncellformat:1:center\ncellformat:2:left\ncellformat:3:right\nvalueformat:1:$#,##0.00\ncol:A:w:160\ncol:B:w:70\ncol:C:w:70\ncol:D:w:80\nsheet:c:4:r:13\ncell:A1:t:FREELANCE PRICE QUOTATION:f:2:c:1:bg:2:cf:1:colspan:4\ncell:A2:t:Client\\c Acme Studio | Quote #\\c QUO-2026-001 | Valid\\c 30 Days:f:3:c:2:bg:3:cf:1:colspan:4\ncell:A4:t:Deliverable:f:1:c:1:bg:4:cf:2\ncell:B4:t:Scope/Hrs:f:1:c:1:bg:4:cf:1\ncell:C4:t:Rate ($):f:1:c:1:bg:4:cf:3\ncell:D4:t:Subtotal ($):f:1:c:1:bg:4:cf:3\ncell:A5:t:UI/UX Wireframing:bg:5\ncell:B5:v:15:bg:5:cf:1\ncell:C5:v:85:bg:5:cf:3:ntvf:1\ncell:D5:vtf:n::B5*C5:bg:5:cf:3:ntvf:1\ncell:A6:t:Frontend Web Development\ncell:B6:v:30:cf:1\ncell:C6:v:95:cf:3:ntvf:1\ncell:D6:vtf:n::B6*C6:cf:3:ntvf:1\ncell:A7:t:SEO Setup:bg:5\ncell:B7:v:1:bg:5:cf:1\ncell:C7:v:450:bg:5:cf:3:ntvf:1\ncell:D7:vtf:n::B7*C7:bg:5:cf:3:ntvf:1\ncell:A8:t:1-Month Support\ncell:B8:v:1:cf:1\ncell:C8:v:600:cf:3:ntvf:1\ncell:D8:vtf:n::B8*C8:cf:3:ntvf:1\ncell:A9:t:Subtotal:f:1:b:1:0:0:0\ncell:D9:vtf:n::SUM(D5\\cD8):f:1:ntvf:1:b:1:0:0:0\ncell:A10:t:Client Discount (10%)\ncell:D10:vtf:n::D9*0.1:c:6:ntvf:1\ncell:A11:t:Net Quotation:f:4:c:2:bg:3:cf:2:b:2:2:2:2\ncell:D11:vtf:n::D9-D10:f:4:c:2:bg:3:cf:3:ntvf:1:b:2:2:2:2\ncell:A13:t:* Terms\\c 50% upfront, balance on delivery. Quotation valid for 30 days.:f:5:c:7:cf:1:colspan:4\ncell:B1:f:1:c:1:bg:2:cf:1\ncell:C1:f:1:c:1:bg:2:cf:1\ncell:D1:f:1:c:1:bg:2:cf:1\ncell:B2:c:2:bg:3:cf:1\ncell:C2:c:2:bg:3:cf:1\ncell:D2:c:2:bg:3:cf:1\ncell:B9:f:1:b:1:0:0:0\ncell:C9:f:1:b:1:0:0:0\ncell:B11:f:1:c:2:bg:3:cf:2:b:2:2:2:2\ncell:C11:f:1:c:2:bg:3:cf:2:b:2:2:2:2\ncell:B13:c:7:cf:1\ncell:C13:c:7:cf:1\ncell:D13:c:7:cf:1\n"
+      },
+      "name": "quote",
+      "hidden": "0"
+    }
+  }
+}

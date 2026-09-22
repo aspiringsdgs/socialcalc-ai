@@ -38,6 +38,7 @@ import {
   lockOpenOutline,
   cloudUploadOutline,
   sparklesOutline,
+  shareSocialOutline,
 } from "ionicons/icons";
 
 import * as AppGeneral from "socialcalc";
@@ -49,6 +50,15 @@ import {
   DemoVideosModal,
   AgentModal,
 } from "socialcalc";
+
+// Opt-in plugins: offline PDF export and platform-aware share / email / print
+import "socialcalc/pdf-export";
+import { configureShare } from "socialcalc/share";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { EmailComposer } from "capacitor-email-composer";
+import { Printer } from "@bcyesil/capacitor-plugin-printer";
+import ExportSharePanel from "./ExportSharePanel";
 
 // Standard MSC templates from src/data
 import template100001 from "./data/100001.json";
@@ -69,6 +79,9 @@ import "@ionic/react/css/display.css";
 import "./App.css";
 
 setupIonicReact();
+
+// Native Capacitor plugins used by the share plugin on iOS / Android (ignored on the web)
+configureShare({ Filesystem, Directory, Encoding, Share, EmailComposer, Printer });
 
 interface FooterItem {
   name: string;
@@ -151,6 +164,7 @@ const App: React.FC = () => {
   const [showEditableCellsModal, setShowEditableCellsModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [showAgentModal, setShowAgentModal] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
 
   const colors = [
     { name: "red", label: "Red", hex: "#ff4444" },
@@ -327,8 +341,10 @@ const App: React.FC = () => {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target?.result as string);
-        if (!parsed.msc && !parsed.sheetArr) {
+        let parsed;
+        try {
+          parsed = AppGeneral.parseMSCFile(event.target?.result as string);
+        } catch {
           notify("Invalid SocialCalc MSC JSON file format");
           return;
         }
@@ -529,7 +545,7 @@ const App: React.FC = () => {
                     Upload JSON
                     <input
                       type="file"
-                      accept=".json"
+                      accept=".json,.msc"
                       style={{ display: "none" }}
                       onChange={handleFileUpload}
                     />
@@ -553,6 +569,9 @@ const App: React.FC = () => {
                 </IonButton>
                 <IonButton title="AI Agent Workbench" onClick={() => setShowAgentModal(true)}>
                   <IonIcon slot="icon-only" icon={sparklesOutline} />
+                </IonButton>
+                <IonButton title="Export, Share & Print" onClick={() => setShowExportPanel(true)}>
+                  <IonIcon slot="icon-only" icon={shareSocialOutline} />
                 </IonButton>
                 <IonButton title="Manage Cell Mappings" onClick={() => setShowEditableCellsModal(true)}>
                   <IonIcon slot="icon-only" icon={settingsOutline} />
@@ -719,6 +738,18 @@ const App: React.FC = () => {
           appMapping={appMapping}
           currentSheet={`sheet${activeSheet}`}
           onExecute={(res) => notify(`Agent applied ${res.count} changes`)}
+          theme={isDarkMode ? "dark" : "default"}
+        />
+
+        {/* Export (PDF / CSV / MSC), Share, Email & Print */}
+        <ExportSharePanel
+          isOpen={showExportPanel}
+          onClose={() => setShowExportPanel(false)}
+          notify={notify}
+          onImportMSC={(data, name) => {
+            setSelectedTemplateKey("custom");
+            applyTemplate(data, name);
+          }}
         />
 
         {/* Toast Notification */}

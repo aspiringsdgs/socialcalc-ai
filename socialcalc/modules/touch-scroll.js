@@ -13,15 +13,10 @@
  *   disableTouchScroll();  // call on cleanup / unmount
  */
 
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-if (typeof window !== "undefined" && window.SocialCalc) {
-    SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-    SocialCalc = global.SocialCalc;
-} else {
-    SocialCalc = {};
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 // ─── Configuration ───────────────────────────────────────────────────────────
 const TOUCH_SCROLL_CONFIG = {

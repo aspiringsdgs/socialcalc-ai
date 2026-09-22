@@ -1,14 +1,8 @@
 // Invoice tracking functions
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  SocialCalc = {}; // Fallback to prevent errors
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 export function getInvoiceCoordinates() {
 

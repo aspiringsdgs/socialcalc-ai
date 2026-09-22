@@ -1,0 +1,14 @@
+{
+  "numsheets": 1,
+  "currentid": "sheet1",
+  "currentname": "customerinvoice",
+  "sheetArr": {
+    "sheet1": {
+      "sheetstr": {
+        "savestr": "version:1.5\nsheet:c:1:r:1\ncell:B2:colspan:2\ncell:D2:colspan:2\ncell:B6:colspan:2\ncell:D6:colspan:2\ncell:B19:colspan:4\ncell:B22:colspan:4\ncell:B23:colspan:4\n"
+      },
+      "name": "customerinvoice",
+      "hidden": "0"
+    }
+  }
+}

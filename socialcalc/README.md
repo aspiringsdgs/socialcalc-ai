@@ -18,6 +18,7 @@ Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `
 - [Quick Start in React / Ionic](#-quick-start-in-react--ionic)
 - [Quick Start in Vanilla JavaScript](#-quick-start-in-vanilla-javascript)
 - [Architecture Overview](#-architecture-overview)
+  - [Core Engine Reference (`core/README.md`)](core/README.md)
 - [UI Components](#-ui-components)
   - [CellEditModal](#1-celleditmodal)
   - [HorizontalScrollBar](#2-horizontalscrollbar)
@@ -37,6 +38,8 @@ Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `
   - [Invoice Utilities](#9-invoice-utilities-modulesinvoicejs)
   - [AI Agent Plugin (Text Editor Agent)](#10-ai-agent-plugin-text-editor-agent-modulesagentjs)
   - [Cell Formatting & Display Suite](#11-cell-formatting--display-suite)
+  - [Offline PDF Export Plugin](#12-offline-pdf-export-plugin-socialcalc-aipdf-export)
+  - [Share, Email & Print Plugin](#13-share-email--print-plugin-socialcalc-aishare)
 - [Event-Driven Architecture](#-event-driven-architecture)
 - [AI & MultiSheet Calc (MSC) Integration](#-ai--multisheet-calc-msc-integration)
 - [TypeScript Support](#-typescript-support)
@@ -229,14 +232,21 @@ socialcalc-ai/
 ├── index.js                      # Main entry point: aggregates core, modules & UI
 ├── index.d.ts                    # Complete TypeScript typings
 ├── package.json                  # Standalone package definition
-├── core/                         # Core calculation engine & DOM table rendering
-│   ├── constants.js              # Formatting codes, default styles & limits
-│   ├── core.js                   # Spreadsheet sheet model, cell evaluation, formula AST
-│   ├── formula.js                # Built-in math, logical, string, financial functions
-│   ├── format-number.js          # Numeric and date formatting routines
-│   ├── spreadsheet-control.js    # Spreadsheet control lifecycle & pane management
-│   ├── table-editor.js           # DOM table editor layout & cursor rendering
-│   └── index.js                  # Assembled core SocialCalc singleton export
+├── core/                         # Spreadsheet engine - full reference in core/README.md
+│   ├── index.js                  # Imports the modules below in load order; exports the SocialCalc singleton
+│   ├── constants.js              # UI strings (localization), default styles & sizes
+│   ├── sheet.js                  # Cell & Sheet model, save format, command language, recalc, undo, clipboard
+│   ├── render.js                 # RenderContext (HTML table), coordinate/DOM helpers, value display, CSV/HTML conversion
+│   ├── touch.js                  # Touch detection & gesture handling
+│   ├── format-number.js          # Excel-style number and date format strings
+│   ├── formula.js                # Formula tokenizer, parser, evaluator & function registry
+│   ├── formula-functions.js      # 109 built-in functions (stat, math, text, date, lookup, financial)
+│   ├── popup.js                  # Popup list & color chooser widgets
+│   ├── table-editor.js           # Interactive grid: cursor, selection, scrolling, input box, cell actions
+│   ├── editor-widgets.js         # Cell handles, scrollbars, drag/tooltip/button/wheel registries, keyboard
+│   ├── spreadsheet-control.js    # Spreadsheet UI: toolbar tabs, formula bar, settings, save/load
+│   ├── workbook.js               # Multi-sheet WorkBook & WorkBookControl, sheet bar, MSC save/load
+│   └── environment.js            # Loaded last: JSON polyfill, app overrides, server/worker shims
 ├── modules/                      # Modular functional features & plugins
 │   ├── plugin-manager.js         # Central registry for dynamic SocialCalc plugins
 │   ├── grid-lines.js             # Cell border grid-lines plugin
@@ -377,6 +387,119 @@ An interactive AI Agent Workbench and chat modal:
 />
 ```
 
+#### Customizable Tab Combinations & Header Controls:
+Developers can customize which tabs are visible, choose specific combinations, and optionally hide the tab headers bar:
+
+```tsx
+// Example 1: Show only AI Copilot and Sheet Context
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  enabledTabs={["actions", "context"]}
+/>
+
+// Example 2: Minimalist AI Copilot with NO tab headers bar (pure chatbot view)
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  enabledTabs={["actions"]}
+  hideTabHeaders={true}
+/>
+
+// Example 4: Built-in Generic Spreadsheet Suggestions
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  suggestions="generic"
+  suggestionsTitle="Helpful Prompts:"
+/>
+
+// Example 5: Custom Developer Prompt Suggestions
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  suggestionsTitle="Payroll Shortcuts:"
+  suggestions={[
+    { label: "Calculate Overtime", prompt: "Compute overtime pay at 1.5x for hours over 40." },
+    { label: "Format Currency", prompt: "Format all salary and total cells to USD currency." },
+    { label: "Summarize Depts", prompt: "Group departments and show total expenditure per department." },
+  ]}
+  promptPlaceholder="Ask AI to analyze payroll or edit cells..."
+/>
+
+// Example 6: Custom Header Title, Icon, and Color/Gradient
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  title="Financial Copilot"
+  headerIcon={calculatorOutline}
+  headerIconColor="#38bdf8"
+  headerColor="linear-gradient(135deg, #0284c7 0%, #0369a1 100%)"
+  headerTextColor="#ffffff"
+  versionTag="Finance v1.0"
+// Example 7: Overall Modal Visual Themes
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  theme="dark" // or "midnight" | "emerald" | "purple" | "slate" | "light" | "default"
+/>
+
+// Example 8: Custom Theme Configuration Object
+<AgentModal
+  isOpen={showAgentModal}
+  onClose={() => setShowAgentModal(false)}
+  theme={{
+    mode: "dark",
+    primaryColor: "#059669",
+    headerBackground: "linear-gradient(135deg, #064e3b, #047857)",
+    cardBackground: "#111827",
+  }}
+/>
+```
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `theme` | `"default" \| "dark" \| "midnight" \| "emerald" \| "purple" \| "slate" \| "light" \| AgentModalThemeConfig` | `"default"` | Controls the overall modal visual theme, supporting dark mode, emerald, purple, slate, or custom theme objects. |
+| `title` / `headerTitle` | `string` | `"SocialCalc AI Agent Workbench"` | Custom title text for the modal window header. |
+| `headerIcon` / `icon` | `any` | `sparklesOutline` | Custom Ionicon or React node for the modal header icon. Pass `false` or `null` to hide. |
+| `headerIconColor` | `string` | `"#a855f7"` | Custom color for the modal header icon. |
+| `headerColor` / `headerBackground` | `string` | Dark indigo gradient | Custom CSS background color or gradient for the modal toolbar (e.g. `"#0f172a"` or `linear-gradient(...)`). |
+| `versionTag` / `headerSubtitle` | `string \| null \| false` | `undefined` (hidden) | Optional pill badge next to header title. Pass a string to display a custom tag. |
+| `copilotTitle` | `string` | `"Agentic Text-Editor Copilot"` | Custom title displayed in the Copilot card header inside the Actions tab. |
+| `copilotIcon` | `any` | `sparklesOutline` | Custom icon for the Copilot card header. Pass `false` or `null` to hide. |
+| `enabledTabs` | `("actions" \| "context" \| "schemas" \| "console")[]` | `["actions", "context", "schemas", "console"]` | Specify the exact list and combination of tabs to display. |
+| `showActionsTab` | `boolean` | `true` | Show or hide the AI Copilot & Actions tab. |
+| `showContextTab` | `boolean` | `true` | Show or hide the Sheet Context tab. |
+| `showSchemasTab` | `boolean` | `true` | Show or hide the LLM Schemas tab. |
+| `showConsoleTab` | `boolean` | `true` | Show or hide the Live Agent Console tab. |
+| `hideTabHeaders` | `boolean` | `false` | Completely hides the tab header bar (aliases: `hideHeaders`, `hideTabBar`). |
+| `defaultTab` | `string` | First enabled tab | Sets the default active tab on opening. |
+| `showPluginTest` | `boolean` | `true` | Show or remove the Direct Plugin Quick Actions & Custom JSON test component (`AgentPluginTest`). Set to `false` for a pure AI Copilot chat interface (aliases: `showQuickActions`, `hidePluginTest`). |
+| `suggestions` | `AgentPromptSuggestion[] \| "generic" \| "invoice" \| boolean` | `undefined` | Configure prompt suggestions: pass `"generic"` for general spreadsheet suggestions, `"invoice"` for invoice actions, custom `[{ label, prompt }]` array, or leave unset/`false` for a clean interface without suggestion chips. |
+| `suggestionsTitle` | `string` | `"Suggestions:"` | Title label displayed above the suggestion chips. |
+| `showSuggestions` | `boolean` | `true` (when `suggestions` provided) | Explicitly show or hide the suggestion chips row. |
+| `promptPlaceholder` | `string` | `"e.g. 'Fill cell C5 with Client Name...'"` | Custom placeholder text for the AI prompt textarea. |
+
+### 7. `AgentPluginTest` (`Agentplugintest`)
+A standalone, removable component for testing direct spreadsheet plugin macros, mappings, and raw JSON actions:
+- **Pre-configured Quick Actions**: Fill Acme invoice header, populate 3 line items, set `=SUM(...)` formula, or clear table.
+- **Custom JSON Action Executor**: Test custom action arrays directly against the active spreadsheet.
+- **Removable from `AgentModal`**: Can be removed from `AgentModal` via `showPluginTest={false}` or `hidePluginTest={true}`.
+- **Usable Standalone**: Can be placed anywhere in your custom developer drawer, page, or modal.
+
+```tsx
+import { AgentPluginTest, Agentplugintest } from "socialcalc";
+
+// Use standalone anywhere in your app:
+<AgentPluginTest
+  currentSheet="sheet1"
+  appMapping={appMapping}
+  onExecute={(res) => console.log("Actions applied:", res)}
+  onLog={(msg) => console.log("Log:", msg)}
+  showCustomJson={true}
+/>
+```
+
 ---
 
 ## 🔌 Plugins & Modules API
@@ -492,6 +615,22 @@ AppGeneral.switchSheet("Sheet2");
 AppGeneral.addNewSheet("Expenses");
 AppGeneral.deleteSheet("Sheet3");
 AppGeneral.renameSheet("Sheet1", "Overview");
+
+// CSV files (UTF-8 BOM so Excel opens them correctly)
+await AppGeneral.exportCurrentSheetAsCSV({ filename: "invoice" });           // downloads invoice.csv
+const csvBlob = await AppGeneral.exportCurrentSheetAsCSV({ returnBlob: true });
+AppGeneral.cleanCSV(csvData);                   // drop blank lines
+AppGeneral.convertToCSV([["Item", "Price"], ["Pen", 2]]);
+
+// MSC workbook files
+await AppGeneral.exportMSC({ filename: "workbook" });                        // raw save data, workbook.msc
+await AppGeneral.exportMSC({ extension: "json", includeAppMapping: true });  // { msc, appMapping } template
+const { msc, appMapping } = AppGeneral.parseMSCFile(fileText);               // accepts either form
+AppGeneral.loadWorkbookData(msc);
+
+// File helpers
+AppGeneral.downloadBlob(blob, "file.pdf");
+const base64 = await AppGeneral.blobToBase64(blob);  // for Capacitor Filesystem.writeFile
 ```
 
 ### 9. Invoice Utilities (`modules/invoice.js`)
@@ -574,6 +713,104 @@ SocialCalc provides built-in formatters for commercial, financial, and date/time
 - **Percentage Formats**: Automatic conversion of decimals/fractions into clean percentage percentages (`15.00%`).
 - **Date & Time Formats**: ISO timestamps, short date (`MM/DD/YYYY`), medium date (`DD-MMM-YYYY`), and 12/24-hour clocks.
 
+### 12. Offline PDF Export Plugin (`socialcalc-ai/pdf-export`)
+Generates PDFs of one sheet or the whole workbook on the device, with no server involved, so it works offline and inside Capacitor apps. Pages are split on row boundaries, chart canvases in the live editor are included, and every page gets a timestamp header, a footer label and `Page X of Y`.
+
+The plugin is opt-in: it is not part of the main `socialcalc-ai` entry, so apps that do not import it do not need its dependencies. To use it, install the optional peer dependencies:
+
+```bash
+npm install jspdf html2canvas
+```
+
+```ts
+import * as AppGeneral from "socialcalc-ai";
+import {
+  configurePdfExport,
+  exportHTMLAsPDF,
+  exportAllSheetsAsPDF,
+  exportCurrentSheetAsPDF,
+  exportWorkbookAsPDF,
+  pdfBlobToBase64,
+} from "socialcalc-ai/pdf-export";
+
+// Optional app-wide defaults (per-call options still win)
+configurePdfExport({ footerText: "Invoice", format: "a4", margin: 10 });
+
+// Download the active sheet as invoice.pdf
+await exportCurrentSheetAsPDF({ filename: "invoice", onProgress: console.log });
+
+// Or pass HTML yourself and get a Blob back (e.g. to share with Capacitor)
+const blob = await exportHTMLAsPDF(AppGeneral.getCurrentHTMLContent(), { returnBlob: true });
+const base64 = await pdfBlobToBase64(blob); // ready for Filesystem.writeFile
+
+// All sheets into one PDF, each sheet starting on a new page
+await exportWorkbookAsPDF({ filename: "all_invoices" });
+await exportAllSheetsAsPDF(AppGeneral.getAllSheetsData(), { returnBlob: true });
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `filename` | `"document"` / `"all_sheets"` | File name without `.pdf` |
+| `format` | `"a4"` | `"a4"`, `"letter"` or `"legal"` |
+| `orientation` | `"portrait"` | `"portrait"` or `"landscape"` |
+| `margin` | `10` | Page margin in mm |
+| `quality` | `4` (one sheet) / `2` (all sheets) | html2canvas render scale |
+| `headerText` | `null` | Top-left text; `null` prints the current date and time, `""` hides it |
+| `footerText` | `""` | Bottom-left text on every page |
+| `showPageNumbers` | `true` | Print `Page X of Y` bottom-right |
+| `editorElementId` | `"tableeditor"` | Live editor element whose chart canvases are copied |
+| `returnBlob` | `false` | Return a `Blob` instead of downloading the file |
+| `onProgress` | — | Called with progress messages |
+
+Importing the module registers it with the Plugin Manager as `"pdfExport"`, so `disablePlugin("pdfExport")` / `enablePlugin("pdfExport", defaults)` and `configurePlugin("pdfExport", defaults)` work too. Export calls reject while the plugin is disabled.
+
+### 13. Share, Email & Print Plugin (`socialcalc-ai/share`)
+Saves, shares, emails and prints exports the right way for the platform the app is running on, detected from the Capacitor runtime:
+
+| | `saveFile` | `shareFile` | `sendEmail` / `emailCurrentSheet` | `printHTML` / `printCurrentSheet` |
+|---|---|---|---|---|
+| **iOS** | Cache file + share sheet | Share sheet | Share sheet with the attachment (PDF by default) | Native printer (AirPrint); PDF first, then HTML |
+| **Android** | Cache file + share sheet | Share sheet | EmailComposer with the attachment (HTML by default) | Native printer (PrintService); PDF first, then HTML |
+| **Web** | Download | Web Share API with the file, else download | Web Share with the file, else `mailto:` plus a download of the attachment | Hidden iframe + print dialog (no pop-up) |
+
+The plugin does not import any Capacitor packages. On iOS and Android, pass in the ones your app has installed. On the web it needs nothing:
+
+```bash
+npm install @capacitor/filesystem @capacitor/share capacitor-email-composer @bcyesil/capacitor-plugin-printer
+```
+
+```ts
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { EmailComposer } from "capacitor-email-composer";
+import { Printer } from "@bcyesil/capacitor-plugin-printer";
+import "socialcalc-ai/pdf-export"; // optional: lets email and print use PDFs
+import {
+  configureShare, getShareCapabilities,
+  saveFile, shareFile, emailCurrentSheet, sendEmail, printCurrentSheet,
+} from "socialcalc-ai/share";
+import { exportCurrentSheetAsPDF } from "socialcalc-ai/pdf-export";
+
+configureShare({ Filesystem, Directory, Encoding, Share, EmailComposer, Printer });
+
+getShareCapabilities(); // { platform: "ios", emailMethod: "share-sheet", printMethod: "native-printer", ... }
+
+// Export + deliver (download on the web, share sheet on devices)
+const pdf = await exportCurrentSheetAsPDF({ returnBlob: true });
+await saveFile({ blob: pdf, filename: "invoice.pdf", dialogTitle: "Share PDF" });
+
+// Email the active sheet (attachment format chosen per platform, or set attachmentFormat)
+await emailCurrentSheet({ filename: "INV-001", subject: "Your invoice", body: "Please find it attached." });
+
+// Or any email / attachment
+await sendEmail({ to: ["a@b.com"], subject: "Data", attachment: { text: csv, filename: "data.csv", mimeType: "text/csv" } });
+
+// Print the active sheet
+await printCurrentSheet({ name: "INV-001", orientation: "portrait" });
+```
+
+Every call resolves to `{ method, platform }` (e.g. `{ method: "email-composer", platform: "android" }`), so the app can show the right message. Temporary cache files are deleted 60 s after sharing (`configureShare({ cleanupAfterMs })`). The plugin registers as `"share"` with the Plugin Manager, and calls reject while it is disabled.
+
 ---
 
 ## 📡 Event-Driven Architecture
@@ -652,6 +889,14 @@ import {
 ---
 
 ## 📦 Release Notes
+
+### v1.0.8
+- **Share, Email & Print Plugin**: New opt-in `socialcalc-ai/share` entry for platform-aware (iOS / Android / web) file saving and sharing, email with attachments, and printing. Capacitor plugins are passed in with `configureShare()`.
+- **CSV & MSC exporters**: `exportCurrentSheetAsCSV`, `exportCSV`, `cleanCSV`, `convertToCSV`, `exportMSC`, `parseMSCFile`, `downloadBlob` and `blobToBase64` in the main entry.
+- **Plugin Manager**: `getPlugin(name)` returns a registered plugin, including the `api` it exposes.
+
+### v1.0.7
+- **Offline PDF Export Plugin**: New opt-in `socialcalc-ai/pdf-export` entry that exports the active sheet or the whole workbook to PDF on the device (jsPDF + html2canvas as optional peer dependencies), registered as the `pdfExport` plugin.
 
 ### v1.0.3
 - **Node.js ESM & Runtime Compatibility**: Enhanced UMD root resolution across all core modules to support `globalThis`, eliminating undefined root errors in Node.js ES module loaders.

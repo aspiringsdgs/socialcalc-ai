@@ -35,6 +35,14 @@ ion-content {
   overscroll-behavior: none;
 }
 
+/* The lock above is for the spreadsheet page only; dialogs must scroll */
+ion-modal ion-content {
+  --overflow: auto;
+  overflow: auto;
+  touch-action: auto;
+  overscroll-behavior: contain;
+}
+
 /* Column resize corner handle icon & indicators */
 .sc-col-resize-corner-handle {
   position: fixed !important;
@@ -287,4 +295,173 @@ ion-content {
 
 .dark-theme .event-listener-display {
   background: rgba(255, 255, 255, 0.1);
+}
+
+/* Export, Share & Print panel */
+.export-panel-modal {
+  --width: min(720px, 100%);
+  --height: min(90vh, 900px);
+}
+
+.export-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.export-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #ffffff;
+}
+
+.export-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.export-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.export-warning {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b45309;
+}
+
+.platform-badge {
+  background: #0ea5e9;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 1px 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.export-kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.export-kv span {
+  color: #64748b;
+}
+
+.export-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  opacity: 0.9;
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.export-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.export-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.export-form label.wide {
+  grid-column: 1 / -1;
+}
+
+.export-form input,
+.export-form select {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.export-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.export-progress {
+  margin: 0;
+  font-size: 12px;
+  color: #2563eb;
+}
+
+.export-preview,
+.export-log {
+  width: 100%;
+  max-height: 180px;
+  min-height: 60px;
+  margin: 8px 0 0;
+  padding: 8px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #0f172a;
+  white-space: pre;
+}
+
+.dark-theme .export-card {
+  background: #1e1e1e;
+  border-color: #333;
+}
+
+.dark-theme .export-form input,
+.dark-theme .export-form select,
+.dark-theme .export-preview,
+.dark-theme .export-log {
+  background: #121212;
+  border-color: #444;
+  color: #e2e8f0;
+}
+
+.dark-theme .export-form label,
+.dark-theme .export-kv span,
+.dark-theme .export-hint {
+  color: #94a3b8;
 }

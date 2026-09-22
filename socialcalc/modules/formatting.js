@@ -1,216 +1,204 @@
 // Cell and sheet formatting functions
-let SocialCalc;
+import {
+  getSocialCalc as getLiveSocialCalc,
+  getWorkbookControl,
+  getEditor,
+  buildSetValueCommands,
+  mergeFontValue,
+  parseFontValue,
+} from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope dynamically
 function getSocialCalc() {
-  if (typeof window !== "undefined" && window.SocialCalc) {
-    return window.SocialCalc;
-  }
-  if (typeof global !== "undefined" && global.SocialCalc) {
-    return global.SocialCalc;
-  }
-  return SocialCalc || {};
+  return getLiveSocialCalc() || {};
 }
 
+function activeEditorOrWarn(fnName) {
+  const editor = getEditor();
+  if (!editor) {
+    console.warn(`[SocialCalc] ${fnName}: spreadsheet is not initialized`);
+  }
+  return editor;
+}
+
+/**
+ * Sets the sheet's default text color through the legacy editor action.
+ * @param {string} name - Color name or CSS color.
+ */
 export function changeSheetColor(name) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-
-  name = name.toLowerCase();
-  SocialCalc.EditorChangeSheetcolor(editor, name);
+  const editor = activeEditorOrWarn("changeSheetColor");
+  if (!editor) return;
+  getSocialCalc().EditorChangeSheetcolor(editor, String(name).toLowerCase());
 }
 
+/**
+ * Sets the sheet's default font color.
+ * @param {string} colorName - CSS color, e.g. "rgb(0,0,0)" or "red".
+ */
 export function changeSheetFontColor(colorName) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-
-  // Create command to set sheet default font color
-  var cmdline = "set sheet defaultcolor " + colorName;
-  editor.EditorScheduleSheetCommands(cmdline, true, false);
+  const editor = activeEditorOrWarn("changeSheetFontColor");
+  if (!editor) return;
+  editor.EditorScheduleSheetCommands("set sheet defaultcolor " + colorName, true, false);
 }
 
+/**
+ * Sets the sheet's default background color.
+ * @param {string} colorName - CSS color, e.g. "rgb(255,255,255)" or "lightyellow".
+ */
 export function changeSheetBackgroundColor(colorName) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-
-  // Create command to set sheet default background color
-  var cmdline = "set sheet defaultbgcolor " + colorName;
-  editor.EditorScheduleSheetCommands(cmdline, true, false);
+  const editor = activeEditorOrWarn("changeSheetBackgroundColor");
+  if (!editor) return;
+  editor.EditorScheduleSheetCommands("set sheet defaultbgcolor " + colorName, true, false);
 }
 
+/**
+ * Runs a sheet command (kept for backward compatibility; see executeCommand).
+ * @param {string} cmdline
+ */
 export function changeFontSheet(cmdline) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  //alert('control are'+control);
-  var editor = control.workbook.spreadsheet.editor;
-  editor.EditorScheduleSheetCommands(cmdline, true, false);
+  executeCommand(cmdline);
 }
 
+/**
+ * Runs one or more sheet commands on the active sheet through the editor (undoable).
+ * @param {string} cmdline
+ */
 export function executeCommand(cmdline) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  //alert('control are'+control);
-  var editor = control.workbook.spreadsheet.editor;
+  const editor = activeEditorOrWarn("executeCommand");
+  if (!editor) return;
   editor.EditorScheduleSheetCommands(cmdline, true, false);
 }
 
-export function applySelectedFormatting(coord, formatting) {
+function currentFontValue(coord) {
+  const editor = getEditor();
+  const sheet = editor && editor.context && editor.context.sheetobj;
+  const cell = sheet && sheet.cells[coord];
+  return cell && cell.font ? sheet.fonts[cell.font] : "";
+}
 
-  const control = SocialCalc.GetCurrentWorkBookControl();
+function colorValue(color) {
+  return typeof color === "object" && color !== null ? color.value : color;
+}
+
+/**
+ * Applies font size, font color and background color to a cell or range as one undo step.
+ * @param {string} coord - Cell or range, e.g. "B2" or "B2:D4".
+ * @param {{ fontSize?: string | null, fontColor?: string | null, bgColor?: string | null }} formatting
+ */
+export function applySelectedFormatting(coord, formatting) {
+  const editor = activeEditorOrWarn("applySelectedFormatting");
+  if (!editor || !formatting) return;
+
+  const cmds = [];
+  if (formatting.fontSize) {
+    const topLeft = String(coord).split(":")[0];
+    cmds.push(`set ${coord} font ${mergeFontValue(currentFontValue(topLeft), { size: formatting.fontSize })}`);
+  }
+  if (formatting.fontColor) {
+    cmds.push(`set ${coord} color ${colorValue(formatting.fontColor)}`);
+  }
+  if (formatting.bgColor) {
+    cmds.push(`set ${coord} bgcolor ${colorValue(formatting.bgColor)}`);
+  }
+  if (cmds.length) {
+    editor.EditorScheduleSheetCommands(cmds.join("\n"), true, false);
+  }
+}
+
+/**
+ * Sets a cell's value and formatting in a single undoable step.
+ * @param {string} coord
+ * @param {any} val - Number, "=formula", HTML, text, "" (clears) or null/undefined (value unchanged).
+ * @param {{ fontSize?: string, fontColor?: any, bgColor?: any, borders?: { top?: string, bottom?: string, left?: string, right?: string }, valueFormat?: string }} [formatting]
+ */
+export function updateCellValueAndFormat(coord, val, formatting) {
+  const control = getWorkbookControl();
+  if (!control) return;
   const editor = control.workbook.spreadsheet.editor;
 
-  if (formatting.fontSize) {
-    // Font command format: set coord font style weight size family
-    // valid sizes: * or size value
-    // We'll preserve existing style/weight/family by using *
-    const cmd = `set ${coord} font * * ${formatting.fontSize} *`;
-    editor.EditorScheduleSheetCommands(cmd, true, false);
-  }
+  const cmds = [];
 
-  if (formatting.fontColor) {
-    // Color command format: set coord color colorname
-    const cmd = `set ${coord} color ${formatting.fontColor}`;
-    editor.EditorScheduleSheetCommands(cmd, true, false);
-  }
-
-  if (formatting.bgColor) {
-    // BgColor command format: set coord bgcolor colorname
-    const cmd = `set ${coord} bgcolor ${formatting.bgColor}`;
-    editor.EditorScheduleSheetCommands(cmd, true, false);
-  }
-
-  // Redisplay to show changes
-  editor.context.sheetobj.ScheduleSheetCommands("redisplay", false, false);
-}
-
-export function updateCellValueAndFormat(coord, val, formatting) {
-  var sc = getSocialCalc();
-  var control = sc.GetCurrentWorkBookControl ? sc.GetCurrentWorkBookControl() : null;
-  if (!control) return;
-  var editor = control.workbook.spreadsheet.editor;
-
-  var cmds = [];
-
-  // 1. Handle Value
   if (val !== null && val !== undefined) {
-    var rawStr = val.toString();
-    if (rawStr === "") {
-      cmds.push("set " + coord + " empty");
-    } else if (rawStr.charAt(0) === "=" && rawStr.indexOf("\n") === -1) {
-      cmds.push("set " + coord + " formula " + rawStr.substring(1));
-    } else {
-      var numVal = parseFloat(rawStr);
-      if (!isNaN(numVal) && isFinite(rawStr) && rawStr.trim() === numVal.toString()) {
-        cmds.push("set " + coord + " value n " + numVal);
-      } else {
-        var isHtml = /<[a-z][\s\S]*>/i.test(rawStr);
-        // Use SocialCalc's native encoding if available, otherwise manual escape
-        var strVal;
-        if (sc.encodeForSave) {
-          strVal = sc.encodeForSave(rawStr);
-        } else {
-          strVal = rawStr.replace(/\\/g, "\\b").replace(/:/g, "\\c").replace(/\n/g, "\\n");
-        }
-
-        if (isHtml) {
-          cmds.push("set " + coord + " text th " + strVal);
-          cmds.push("set " + coord + " textvalueformat text-html");
-        } else {
-          cmds.push("set " + coord + " text t " + strVal);
-        }
-      }
-    }
+    cmds.push(...buildSetValueCommands(coord, typeof val === "number" ? val : val.toString()));
   }
 
-  // 2. Handle Formatting (only generate commands for properties explicitly passed in formatting)
   if (formatting) {
     if (formatting.fontSize !== undefined) {
-      cmds.push("set " + coord + " font * * " + formatting.fontSize + " *");
+      cmds.push(`set ${coord} font ${mergeFontValue(currentFontValue(coord), { size: formatting.fontSize || null })}`);
     }
     if (formatting.fontColor !== undefined) {
-      var fColor =
-        typeof formatting.fontColor === "object" && formatting.fontColor !== null
-          ? formatting.fontColor.value
-          : formatting.fontColor;
-      if (fColor !== undefined) {
-        cmds.push("set " + coord + " color " + (fColor || ""));
-      }
+      const fColor = colorValue(formatting.fontColor);
+      if (fColor !== undefined) cmds.push("set " + coord + " color " + (fColor || ""));
     }
     if (formatting.bgColor !== undefined) {
-      var bColor =
-        typeof formatting.bgColor === "object" && formatting.bgColor !== null
-          ? formatting.bgColor.value
-          : formatting.bgColor;
-      if (bColor !== undefined) {
-        cmds.push("set " + coord + " bgcolor " + (bColor || ""));
-      }
+      const bColor = colorValue(formatting.bgColor);
+      if (bColor !== undefined) cmds.push("set " + coord + " bgcolor " + (bColor || ""));
     }
     if (formatting.borders) {
-      if (formatting.borders.top !== undefined) {
-        cmds.push("set " + coord + " bt " + (formatting.borders.top || ""));
-      }
-      if (formatting.borders.bottom !== undefined) {
-        cmds.push("set " + coord + " bb " + (formatting.borders.bottom || ""));
-      }
-      if (formatting.borders.left !== undefined) {
-        cmds.push("set " + coord + " bl " + (formatting.borders.left || ""));
-      }
-      if (formatting.borders.right !== undefined) {
-        cmds.push("set " + coord + " br " + (formatting.borders.right || ""));
+      const sides = { top: "bt", bottom: "bb", left: "bl", right: "br" };
+      for (const side of Object.keys(sides)) {
+        if (formatting.borders[side] !== undefined) {
+          cmds.push(`set ${coord} ${sides[side]} ${formatting.borders[side] || ""}`);
+        }
       }
     }
     if (formatting.valueFormat !== undefined) {
-      if (!formatting.valueFormat || formatting.valueFormat === "default" || formatting.valueFormat === "") {
-        cmds.push("set " + coord + " nontextvalueformat ");
-      } else {
-        cmds.push("set " + coord + " nontextvalueformat " + formatting.valueFormat);
-      }
+      const vf = formatting.valueFormat;
+      cmds.push("set " + coord + " nontextvalueformat " + (!vf || vf === "default" ? "" : vf));
     }
   }
 
   if (cmds.length === 0) return;
 
-  // Execute all as one transaction
-  var cmdstr = cmds.join("\n");
-
+  const cmdstr = cmds.join("\n");
   if (control.ExecuteWorkBookControlCommand) {
-    var commandObj = {
-      cmdtype: "scmd",
-      id: control.currentSheetButton ? control.currentSheetButton.id : "sheet1",
-      cmdstr: cmdstr,
-      saveundo: true
-    };
-    control.ExecuteWorkBookControlCommand(commandObj, false);
+    control.ExecuteWorkBookControlCommand(
+      {
+        cmdtype: "scmd",
+        id: control.currentSheetButton ? control.currentSheetButton.id : "sheet1",
+        cmdstr,
+        saveundo: true,
+      },
+      false
+    );
   } else {
     editor.EditorScheduleSheetCommands(cmdstr, true, false);
   }
 }
 
+/**
+ * Removes font, colors and borders from a cell or range as one undo step.
+ * @param {string} coord
+ */
 export function resetCellFormatting(coord) {
-
-  const control = SocialCalc.GetCurrentWorkBookControl();
-  const editor = control.workbook.spreadsheet.editor;
-
-  // Reset font to default using SocialCalc command
-  const fontCmd = `set ${coord} font * * *`;
-  editor.EditorScheduleSheetCommands(fontCmd, true, false);
-
-  // Reset color to default
-  const colorCmd = `set ${coord} color *`;
-  editor.EditorScheduleSheetCommands(colorCmd, true, false);
-
-  // Reset background color to default
-  const bgCmd = `set ${coord} bgcolor *`;
-  editor.EditorScheduleSheetCommands(bgCmd, true, false);
-
-  // Reset borders
-  editor.EditorScheduleSheetCommands(`set ${coord} bt \nset ${coord} bb \nset ${coord} bl \nset ${coord} br `, true, false);
-
-  // Redisplay to show changes
-  editor.context.sheetobj.ScheduleSheetCommands("redisplay", false, false);
+  const editor = activeEditorOrWarn("resetCellFormatting");
+  if (!editor) return;
+  editor.EditorScheduleSheetCommands(
+    [
+      `set ${coord} font * * *`,
+      `set ${coord} color `,
+      `set ${coord} bgcolor `,
+      `set ${coord} bt `,
+      `set ${coord} bb `,
+      `set ${coord} bl `,
+      `set ${coord} br `,
+    ].join("\n"),
+    true,
+    false
+  );
 }
 
+/**
+ * Reads a cell's formatting with style numbers resolved to their values.
+ * @param {string} [coord] - Defaults to the cursor cell.
+ * @returns {null | {
+ *   coord: string, font: number | null, fontValue: string | null, fontSize: string | null,
+ *   fontFamily: string | null, bold: boolean, italic: boolean, color: string | null,
+ *   bgcolor: string | null, align: string | null, valueFormat: string | null,
+ *   textFormat: string | null, borders: { top: string | null, bottom: string | null, left: string | null, right: string | null }
+ * }}
+ */
 export function getCellFormatting(coord) {
-  const sc = getSocialCalc();
-  const control = sc.GetCurrentWorkBookControl ? sc.GetCurrentWorkBookControl() : null;
+  const control = getWorkbookControl();
   if (!control || !control.workbook || !control.workbook.spreadsheet) {
     return null;
   }
@@ -227,31 +215,30 @@ export function getCellFormatting(coord) {
     return null;
   }
 
-  // Resolve numeric color indices to actual color strings using sheetobj.colors[]
-  const resolvedColor = cell.color ? (sheetobj.colors[cell.color] || null) : null;
-  const resolvedBgColor = cell.bgcolor ? (sheetobj.colors[cell.bgcolor] || null) : null;
-
-  const resolvedBt = cell.bt ? (sheetobj.borderstyles[cell.bt] || null) : null;
-  const resolvedBb = cell.bb ? (sheetobj.borderstyles[cell.bb] || null) : null;
-  const resolvedBl = cell.bl ? (sheetobj.borderstyles[cell.bl] || null) : null;
-  const resolvedBr = cell.br ? (sheetobj.borderstyles[cell.br] || null) : null;
-
-  // Resolve nontextvalueformat (number, currency, date, etc.)
-  let resolvedValueFormat = null;
-  if (cell.nontextvalueformat !== undefined && cell.nontextvalueformat !== null) {
-    resolvedValueFormat = sheetobj.valueformats[cell.nontextvalueformat - 0] || null;
-  }
+  const lookup = (list, index) => (index ? list[index] || null : null);
+  const fontValue = lookup(sheetobj.fonts, cell.font);
+  const font = parseFontValue(fontValue);
 
   return {
     font: cell.font || null,
-    color: resolvedColor,
-    bgcolor: resolvedBgColor,
-    valueFormat: resolvedValueFormat,
+    fontValue,
+    fontSize: font.size,
+    fontFamily: font.family,
+    bold: font.weight === "bold",
+    italic: font.style === "italic",
+    color: lookup(sheetobj.colors, cell.color),
+    bgcolor: lookup(sheetobj.colors, cell.bgcolor),
+    align: lookup(sheetobj.cellformats, cell.cellformat),
+    valueFormat:
+      cell.nontextvalueformat !== undefined && cell.nontextvalueformat !== null
+        ? sheetobj.valueformats[cell.nontextvalueformat - 0] || null
+        : null,
+    textFormat: lookup(sheetobj.valueformats, cell.textvalueformat),
     borders: {
-      top: resolvedBt,
-      bottom: resolvedBb,
-      left: resolvedBl,
-      right: resolvedBr
+      top: lookup(sheetobj.borderstyles, cell.bt),
+      bottom: lookup(sheetobj.borderstyles, cell.bb),
+      left: lookup(sheetobj.borderstyles, cell.bl),
+      right: lookup(sheetobj.borderstyles, cell.br),
     },
     coord: coord,
   };

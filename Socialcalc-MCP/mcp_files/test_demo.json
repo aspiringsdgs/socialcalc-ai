@@ -1,0 +1,14 @@
+{
+  "numsheets": 1,
+  "currentid": "sheet1",
+  "currentname": "Summary",
+  "sheetArr": {
+    "sheet1": {
+      "sheetstr": {
+        "savestr": "version:1.5\nfont:1:normal bold 10pt Arial\ncolor:1:rgb(255,255,255)\ncolor:2:rgb(33,150,243)\ncellformat:1:center\nsheet:c:3:r:3\ncell:A1:t:Month:f:1:c:1:bg:2:cf:1\ncell:B1:t:Revenue:f:1:c:1:bg:2:cf:1\ncell:C1:t:Expenses:f:1:c:1:bg:2:cf:1\ncell:A2:t:January\ncell:B2:v:15000\ncell:C2:v:8000\ncell:A3:t:February\ncell:B3:v:18500\ncell:C3:v:9200\n"
+      },
+      "name": "Summary",
+      "hidden": "0"
+    }
+  }
+}

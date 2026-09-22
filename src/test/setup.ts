@@ -158,8 +158,9 @@ vi.mock("@ionic/react", () => ({
     ),
 }));
 
-// Mock Ionic icons
-vi.mock("ionicons/icons", () => ({
+// Mock Ionic icons (spread the real module so newly used icons never break collection)
+vi.mock("ionicons/icons", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, string>>()),
   addOutline: "add-outline",
   closeOutline: "close-outline",
   close: "close",

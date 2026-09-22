@@ -5,15 +5,10 @@
  * register, enable, disable, and configure plugins on any SocialCalc instance.
  */
 
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  SocialCalc = {};
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 // Registry of registered plugins
 const _plugins = new Map();
@@ -168,6 +163,15 @@ export function configurePlugin(name, config) {
   if (plugin && typeof plugin.configure === 'function') {
     plugin.configure(config);
   }
+}
+
+/**
+ * Get a registered plugin definition by name (including any `api` it exposes), or null.
+ * Lets plugins use each other without importing each other.
+ * @param {string} name
+ */
+export function getPlugin(name) {
+  return _plugins.get(name) || null;
 }
 
 /**

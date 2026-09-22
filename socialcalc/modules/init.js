@@ -1,14 +1,8 @@
 // Spreadsheet initialization functions
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  console.error("SocialCalc not found in global scope");
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 import { setupMouseListener } from "./listeners.js";
 

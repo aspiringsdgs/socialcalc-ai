@@ -14,7 +14,10 @@
 import { registerPlugin, getActiveEditor, getActiveSpreadsheet } from "./plugin-manager.js";
 import { getAppMapping } from "./editable-cells.js";
 
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
+
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 function getSocialCalc() {
   if (typeof window !== "undefined" && window.SocialCalc) return window.SocialCalc;
@@ -244,6 +247,159 @@ export function extractMappingFields(appMapping, targetSheet = "sheet1") {
 }
 
 /**
+ * Helper to convert camelCase, PascalCase, or dot-separated keys to human-readable titles
+ */
+export function humanizeFieldTitle(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\./g, " - ")
+    .replace(/_/g, " ")
+    .trim();
+}
+
+/**
+ * Extract all currently editable cells, their titles/labels, coordinates, and current cell values.
+ * Traverses form fields, table columns/rows, and any restricted EditableCells configurations.
+ */
+export function extractEditableCells(options = {}) {
+  const currentSheet = options.sheetName || getActiveSheetId();
+  const activeMapping = options.appMapping || getAppMapping();
+  const sheet = getActiveSheetObject(currentSheet);
+  const mappingInfo = extractMappingFields(activeMapping, currentSheet);
+  const sc = getSocialCalc();
+
+  const editableList = [];
+  const seenCoords = new Set();
+
+  // 1. From template mapping form fields
+  if (mappingInfo.hasMappings) {
+    for (const [key, field] of Object.entries(mappingInfo.fields)) {
+      if (!field || field.editable === false || !field.cell) continue;
+      const coord = String(field.cell).toUpperCase().trim();
+      if (seenCoords.has(coord)) continue;
+      seenCoords.add(coord);
+
+      const cellData = sheet?.cells?.[coord];
+      const val = cellData ? (cellData.datavalue !== undefined ? cellData.datavalue : "") : "";
+      const title = humanizeFieldTitle(key);
+
+      editableList.push({
+        cell: coord,
+        title,
+        fieldName: key,
+        section: field.section || "root",
+        currentValue: val,
+        displayValue: cellData?.displaystring || String(val),
+        type: field.type || "text",
+        formula: cellData?.formula ? `=${cellData.formula}` : undefined,
+      });
+    }
+
+    // 2. From template mapping tables (all editable columns across row range)
+    for (const [tableName, table] of Object.entries(mappingInfo.tables)) {
+      if (!table || !table.columns) continue;
+      for (let r = table.startRow; r <= table.endRow; r++) {
+        for (const [colKey, col] of Object.entries(table.columns)) {
+          if (!col || col.editable === false) continue;
+          const coord = `${col.columnLetter}${r}`;
+          if (seenCoords.has(coord)) continue;
+          seenCoords.add(coord);
+
+          const cellData = sheet?.cells?.[coord];
+          const val = cellData ? (cellData.datavalue !== undefined ? cellData.datavalue : "") : "";
+          const colTitle = col.name || humanizeFieldTitle(colKey);
+          const title = `${humanizeFieldTitle(tableName)} [Row ${r}] - ${colTitle}`;
+
+          editableList.push({
+            cell: coord,
+            title,
+            fieldName: `${tableName}.${colKey}`,
+            table: tableName,
+            row: r,
+            currentValue: val,
+            displayValue: cellData?.displaystring || String(val),
+            type: col.type || "text",
+            formula: cellData?.formula ? `=${cellData.formula}` : undefined,
+          });
+        }
+      }
+    }
+  }
+
+  // 3. From sc.EditableCells if explicitly configured
+  if (sc.EditableCells && sc.EditableCells.allow && sc.EditableCells.cells) {
+    const prefix1 = `${currentSheet}!`;
+    const prefix2 = `${currentSheet.toLowerCase()}!`;
+    for (const rawKey of Object.keys(sc.EditableCells.cells)) {
+      let coord = rawKey;
+      if (coord.startsWith(prefix1)) coord = coord.slice(prefix1.length);
+      else if (coord.startsWith(prefix2)) coord = coord.slice(prefix2.length);
+      else if (coord.startsWith("sheet1!")) coord = coord.slice(7);
+
+      coord = coord.toUpperCase().trim();
+      if (/^[A-Z]+[0-9]+$/.test(coord) && !seenCoords.has(coord)) {
+        seenCoords.add(coord);
+        const cellData = sheet?.cells?.[coord];
+        const val = cellData ? (cellData.datavalue !== undefined ? cellData.datavalue : "") : "";
+        editableList.push({
+          cell: coord,
+          title: `Cell ${coord}`,
+          fieldName: coord,
+          currentValue: val,
+          displayValue: cellData?.displaystring || String(val),
+          type: typeof val === "number" ? "number" : "text",
+          formula: cellData?.formula ? `=${cellData.formula}` : undefined,
+        });
+      }
+    }
+  }
+
+  // 4. Fallback for free-form spreadsheet mode (no template mappings or restrictions)
+  if (editableList.length === 0 && sheet && sheet.cells) {
+    const maxCells = options.maxCells || 60;
+    let count = 0;
+    for (const [coord, cellData] of Object.entries(sheet.cells)) {
+      if (!cellData || count >= maxCells) break;
+      const val = cellData.datavalue !== undefined ? cellData.datavalue : "";
+      if (val !== "" || cellData.formula) {
+        count++;
+        editableList.push({
+          cell: coord,
+          title: `Cell ${coord}`,
+          fieldName: coord,
+          currentValue: val,
+          displayValue: cellData?.displaystring || String(val),
+          type: typeof val === "number" ? "number" : "text",
+          formula: cellData?.formula ? `=${cellData.formula}` : undefined,
+        });
+      }
+    }
+  }
+
+  return editableList;
+}
+
+/**
+ * Format editable cells list into a Markdown summary for LLM prompt injection
+ */
+export function formatEditableCellsSummary(editableCells = []) {
+  if (!editableCells || editableCells.length === 0) {
+    return "No explicitly defined editable cells found. Operating in free-form mode.";
+  }
+  const lines = [
+    `### Current Editable Cells & Values (${editableCells.length} cells):`,
+    "| Cell | Title / Field Label | Current Cell Value | Type |",
+    "| :--- | :--- | :--- | :--- |",
+  ];
+  for (const c of editableCells) {
+    const valDisplay = c.currentValue !== "" ? String(c.currentValue).replace(/\|/g, "/") : "(empty)";
+    lines.push(`| ${c.cell} | ${c.title} | ${valDisplay} | ${c.type} |`);
+  }
+  return lines.join("\n");
+}
+
+/**
  * Extract clean, structured context from the spreadsheet and app mappings
  * Suitable for LLM context injection (Gemini, Claude, GPT, or backend servers)
  */
@@ -255,6 +411,8 @@ export function getAgentContext(options = {}) {
 
   const sheet = getActiveSheetObject(currentSheet);
   const mappingInfo = extractMappingFields(activeMapping, currentSheet);
+  const editableCells = extractEditableCells({ sheetName: currentSheet, appMapping: activeMapping, maxCells });
+  const editableCellsSummary = formatEditableCellsSummary(editableCells);
 
   const nonBlankCells = {};
   let totalNonBlank = 0;
@@ -352,9 +510,11 @@ export function getAgentContext(options = {}) {
   const summaryLines = [];
   summaryLines.push(`Sheet: "${currentSheet}" (Total sheets: ${allSheets.join(", ")})`);
   summaryLines.push(`Active Range: ${dimensions.usedRange}, Total non-empty cells: ${totalNonBlank}`);
+  summaryLines.push("");
+  summaryLines.push(editableCellsSummary);
 
   if (mappingInfo.hasMappings) {
-    summaryLines.push("\n### Defined Template Mappings (Editable Fields):");
+    summaryLines.push("\n### Defined Template Mappings:");
     for (const [key, f] of Object.entries(populatedFields)) {
       if (key.includes(".")) {
         summaryLines.push(
@@ -382,6 +542,8 @@ export function getAgentContext(options = {}) {
       fields: populatedFields,
       tables: populatedTables,
     },
+    editableCells,
+    editableCellsSummary,
     cells: nonBlankCells,
     summary: summaryLines.join("\n"),
   };
@@ -997,6 +1159,115 @@ export function executeAgentResponse(response, options = {}) {
   return executeAgentActions(actions, options);
 }
 
+/**
+ * High-level Frontend SDK method to send instructions with current editable cells and values to the AI Agent.
+ * Intelligently returns executable commands for spreadsheet tasks, or a polite message for generic prompts.
+ * 
+ * @param {string} prompt - User's instruction
+ * @param {object} [options]
+ * @param {string} [options.sheetName]
+ * @param {object} [options.appMapping]
+ * @param {string} [options.endpoint] - Defaults to '/agent/socialcalc/test'
+ * @param {boolean} [options.autoExecute] - Whether to automatically apply returned actions (default: false)
+ * @returns {Promise<{ success: boolean; type: "actions" | "message"; message: string | null; actions: any[]; executionResult?: any; error?: string }>}
+ */
+export async function callSocialCalcAgent(prompt, options = {}) {
+  const currentSheet = options.sheetName || getActiveSheetId();
+  const appMapping = options.appMapping || getAppMapping();
+  const endpoint = options.endpoint || "/agent/socialcalc/test";
+
+  const context = exportAgentContext({ sheetName: currentSheet, appMapping });
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      },
+      body: JSON.stringify({
+        prompt: String(prompt || "").trim(),
+        context: {
+          sheetName: context.sheetName,
+          editableCells: context.editableCells,
+          editableCellsSummary: context.editableCellsSummary,
+          mappings: context.mappings,
+          dimensions: context.dimensions,
+          summary: context.summary,
+        },
+        modelName: options.modelName
+      })
+    });
+
+    const data = await response.json();
+
+    // Case 1: Sheet Context Explanation / Summary / Email drafting (Max 300 words)
+    if (data.type === "explanation") {
+      return {
+        success: true,
+        type: "explanation",
+        message: data.message || "",
+        actions: [],
+        raw: data
+      };
+    }
+
+    // Case 2: Off-topic / out of context prompt
+    if (data.type === "off_topic" || (data.message && (!data.actions || data.actions.length === 0) && "only write values" in String(data.message).toLowerCase())) {
+      return {
+        success: true,
+        type: "off_topic",
+        message: data.message || "I can only write values to the spreadsheet cells, please give me input accordingly.",
+        actions: [],
+        raw: data
+      };
+    }
+
+    // Case 3: Executable spreadsheet filling actions
+    if (data.success && Array.isArray(data.actions) && data.actions.length > 0) {
+      let executionResult = null;
+      if (options.autoExecute === true && data.actions.length > 0) {
+        executionResult = executeAgentActions(data.actions, { sheetName: currentSheet, appMapping });
+      }
+      return {
+        success: true,
+        type: "actions",
+        message: null,
+        actions: data.actions,
+        executionResult,
+        raw: data
+      };
+    }
+
+    // Fallback message if message is present
+    if (data.message) {
+      return {
+        success: true,
+        type: "explanation",
+        message: data.message,
+        actions: [],
+        raw: data
+      };
+    }
+
+    return {
+      success: false,
+      type: "error",
+      message: data.error || "Failed to process instruction",
+      actions: [],
+      raw: data
+    };
+  } catch (err) {
+    return {
+      success: false,
+      type: "error",
+      message: err.message || "Network error calling AI Agent",
+      actions: [],
+      error: err.message
+    };
+  }
+}
+
 // Register as a SocialCalc plugin
 registerPlugin("agent", {
   metadata: {
@@ -1018,6 +1289,9 @@ if (typeof window !== "undefined") {
   window.SocialCalc.isAgentEnabled = isAgentEnabled;
   window.SocialCalc.getAgentContext = getAgentContext;
   window.SocialCalc.exportAgentContext = exportAgentContext;
+  window.SocialCalc.extractEditableCells = extractEditableCells;
+  window.SocialCalc.formatEditableCellsSummary = formatEditableCellsSummary;
+  window.SocialCalc.callSocialCalcAgent = callSocialCalcAgent;
   window.SocialCalc.getAgentToolDefinitions = getAgentToolDefinitions;
   window.SocialCalc.generateAgentSystemPrompt = generateAgentSystemPrompt;
   window.SocialCalc.executeAgentActions = executeAgentActions;
@@ -1025,3 +1299,4 @@ if (typeof window !== "undefined") {
   window.SocialCalc.executeAgentResponse = executeAgentResponse;
   window.SocialCalc.registerAgentActionHandler = registerAgentActionHandler;
 }
+

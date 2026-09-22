@@ -1,15 +1,8 @@
 // Sheet management and data functions
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  console.error("SocialCalc not found in global scope");
-  SocialCalc = {}; // Fallback to prevent errors
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 export function activateFooterButton(index) {
   if (index === SocialCalc.oldBtnActive) return;
@@ -86,11 +79,20 @@ export function getCurrentHTMLContent() {
 
 export function getAllHTMLContent(sheetdata) {
   var appsheets = {};
-  // var control = SocialCalc.GetCurrentWorkBookControl();
+  var control = SocialCalc.GetCurrentWorkBookControl();
 
-  for (var i = 1; i <= sheetdata.numsheets; i++) {
-    var key = "sheet" + i;
-    appsheets[key] = key;
+  // Use the real sheet ids (they are not always sheet1..N, e.g. after a sheet was deleted)
+  var ids =
+    sheetdata && sheetdata.sheetArr
+      ? Object.keys(sheetdata.sheetArr)
+      : control && control.sheetButtonArr
+        ? Object.keys(control.sheetButtonArr)
+        : [];
+  if (!ids.length && sheetdata && sheetdata.numsheets) {
+    for (var i = 1; i <= sheetdata.numsheets; i++) ids.push("sheet" + i);
+  }
+  for (var j = 0; j < ids.length; j++) {
+    appsheets[ids[j]] = ids[j];
   }
 
   return SocialCalc.WorkbookControlCreateSheetHTML(appsheets);
@@ -121,6 +123,7 @@ export function getAllSheetsData() {
     sheetsData.push({
       id: sheetId,
       name: sheetId.replace("sheet", "Sheet "), // Convert 'sheet1' to 'Sheet 1'
+      title: control.sheetButtonArr[sheetId].value, // the tab's real name
       htmlContent: htmlContent,
     });
   }

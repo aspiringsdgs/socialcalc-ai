@@ -13,6 +13,14 @@ export default defineConfig({
       "socialcalc-ai": path.resolve(__dirname, "./socialcalc"),
     },
   },
+  server: {
+    proxy: {
+      "/agent": {
+        target: "http://127.0.0.1:5342",
+        changeOrigin: true,
+      },
+    },
+  },
 
   define: {
     __DATE__: `'${new Date().toISOString()}'`,

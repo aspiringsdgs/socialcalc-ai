@@ -1,0 +1,14 @@
+{
+  "numsheets": 1,
+  "currentid": "sheet1",
+  "currentname": "accountbalance",
+  "sheetArr": {
+    "sheet1": {
+      "sheetstr": {
+        "savestr": "version:1.5\nfont:1:normal bold 14pt Arial\nfont:2:normal normal 9pt Arial\nfont:3:normal bold 9pt Arial\nfont:4:normal bold 16pt Arial\nfont:5:normal bold 11pt Arial\nfont:6:normal bold 10pt Arial\ncolor:1:#ffffff\ncolor:2:#4f46e5\ncolor:3:#4F46E5\ncolor:4:#EEF2FF\ncolor:5:rgb(5,150,105)\ncolor:6:rgb(236,253,245)\ncolor:7:rgb(79,70,229)\ncolor:8:rgb(238,242,255)\ncolor:9:rgb(255,255,255)\ncolor:10:rgb(30,41,59)\ncolor:11:rgb(15,23,42)\ncolor:12:rgb(248,250,252)\ncolor:13:rgb(226,232,240)\ncellformat:1:center\ncellformat:2:left\ncellformat:3:right\nvalueformat:1:0,##0.00\nvalueformat:2:YYYY-MM-DD\ncol:A:w:80\ncol:B:w:140\ncol:C:w:80\ncol:D:w:90\nsheet:c:4:r:14\ncell:A1:t:Account Balance:f:1:c:1:bg:2:cf:1:colspan:4\ncell:A2:t:Personal & Business Ledger:f:2:c:3:bg:4:cf:1:colspan:4\ncell:A4:t:Total Income:f:3:c:5:bg:6:cf:1:colspan:2\ncell:A5:v:5000:f:4:c:5:bg:6:cf:1:ntvf:1:colspan:2\ncell:C4:t:Net Balance:f:3:c:7:bg:8:cf:1:colspan:2\ncell:C5:vtf:n::D14-C14:f:4:c:7:bg:8:cf:1:ntvf:1:colspan:2\ncell:A8:t:Recent Transactions:f:5:c:9:bg:10:cf:2:colspan:4\ncell:A9:t:Date:f:6:c:9:bg:10:cf:2\ncell:B9:t:Description:f:6:c:9:bg:10:cf:3\ncell:C9:t:Category:f:6:c:9:bg:10:cf:3\ncell:D9:t:Amount:f:6:c:9:bg:10:cf:3\ncell:A10:t:2026-08-01:f:2:c:11:cf:2:ntvf:2\ncell:B10:t:Opening Balance:f:2:c:11:cf:3\ncell:C10:t:Deposit:f:2:c:11:cf:3\ncell:D10:v:3500:f:2:c:11:cf:3:ntvf:1\ncell:A11:t:2026-08-05:f:2:c:11:bg:12:cf:2:ntvf:2\ncell:B11:t:Grocery Store:f:2:c:11:bg:12:cf:3\ncell:C11:t:Supplies:f:2:c:11:bg:12:cf:3\ncell:D11:v:-120.5:f:2:c:11:bg:12:cf:3:ntvf:1\ncell:A12:t:2026-08-10:f:2:c:11:cf:2:ntvf:2\ncell:B12:t:Consulting Client:f:2:c:11:cf:3\ncell:C12:t:Income:f:2:c:11:cf:3\ncell:D12:v:1500:f:2:c:11:cf:3:ntvf:1\ncell:A13:t:2026-08-15:f:2:c:11:bg:12:cf:2:ntvf:2\ncell:B13:t:Electric Utility:f:2:c:11:bg:12:cf:3\ncell:C13:t:Utilities:f:2:c:11:bg:12:cf:3\ncell:D13:v:-85:f:2:c:11:bg:12:cf:3:ntvf:1\ncell:A14:t:Total:f:6:c:11:bg:13:cf:2\ncell:B14:f:6:c:11:bg:13:cf:3\ncell:C14:f:6:c:11:bg:13:cf:3\ncell:D14:vtf:n::SUM(D9\\cD12):f:6:c:11:bg:13:cf:3:ntvf:1\n"
+      },
+      "name": "accountbalance",
+      "hidden": "0"
+    }
+  }
+}

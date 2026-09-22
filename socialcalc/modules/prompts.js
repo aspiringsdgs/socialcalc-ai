@@ -1,47 +1,37 @@
 // User prompt and input functions
 import { showFormattingButtons } from "./utils.js";
 
-let SocialCalc;
+import { SocialCalcRef, buildSetValueCommands } from "./runtime.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  console.error("SocialCalc not found in global scope");
-  SocialCalc = {}; // Fallback to prevent errors
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
+
+// Constraint for the cursor cell, or undefined when no constraints are defined
+function cursorConstraint(editor) {
+  if (!editor || !editor.ecell) return undefined;
+  var cellname = editor.workingvalues.currentsheet + "!" + editor.ecell.coord;
+  var constraints = SocialCalc.EditableCells && SocialCalc.EditableCells.constraints;
+  return constraints ? constraints[cellname] : undefined;
+}
+
+function activeEditor() {
+  var control = SocialCalc.GetCurrentWorkBookControl ? SocialCalc.GetCurrentWorkBookControl() : null;
+  return control && control.workbook ? control.workbook.spreadsheet.editor : null;
 }
 
 export function mustshowprompt(coord) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-  var cellname = editor.workingvalues.currentsheet + "!" + editor.ecell.coord;
-  var constraint = SocialCalc.EditableCells.constraints[cellname];
-  if (constraint) {
-  }
+  cursorConstraint(activeEditor());
   // for phone apps always show prompt
   return true;
 }
 
 export function getinputtype(coord) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-  var cellname = editor.workingvalues.currentsheet + "!" + editor.ecell.coord;
-  var constraint = SocialCalc.EditableCells.constraints[cellname];
-  if (constraint) {
-  }
+  cursorConstraint(activeEditor());
   return null;
 }
 
 export function prompttype(coord) {
-  var control = SocialCalc.GetCurrentWorkBookControl();
-  var editor = control.workbook.spreadsheet.editor;
-  var cellname = editor.workingvalues.currentsheet + "!" + editor.ecell.coord;
-  var constraint = SocialCalc.EditableCells.constraints[cellname];
-
-  if (constraint) {
-  }
+  cursorConstraint(activeEditor());
   return null;
 }
 
@@ -53,8 +43,7 @@ export function showprompt(coord) {
 export function enhancedShowPrompt(coord) {
   var control = SocialCalc.GetCurrentWorkBookControl();
   var editor = control.workbook.spreadsheet.editor;
-  var cellname = editor.workingvalues.currentsheet + "!" + editor.ecell.coord;
-  var constraint = SocialCalc.EditableCells.constraints[cellname];
+  var constraint = cursorConstraint(editor);
   var highlights = editor.context.highlights;
 
   var wval = editor.workingvalues;
@@ -87,24 +76,9 @@ export function enhancedShowPrompt(coord) {
     var callbackfn = function () {
       console.log("callback val " + val);
 
-      // Create command to set cell text/value
-      var cmd = "";
+      // Create command to set cell text/value (encoded, so ":", "\" and newlines survive)
       var cellRef = editor.ecell.coord;
-
-      // Determine if value is number or text
-      var numVal = parseFloat(val);
-      if (!isNaN(numVal) && isFinite(val) && val.toString().trim() === numVal.toString()) {
-        cmd = "set " + cellRef + " value n " + numVal;
-      } else {
-        // Text value - encode if necessary
-        var strVal = val.toString();
-        var isHtml = /<[a-z][\s\S]*>/i.test(strVal);
-        if (isHtml) {
-          cmd = "set " + cellRef + " text th " + strVal + "\nset " + cellRef + " textvalueformat text-html";
-        } else {
-          cmd = "set " + cellRef + " text t " + strVal;
-        }
-      }
+      var cmd = buildSetValueCommands(cellRef, typeof val === "number" ? val : val.toString()).join("\n");
 
       if (editor.context && editor.context.sheetobj) {
         // Use ExecuteWorkBookControlCommand if available to handle undo/redo properly

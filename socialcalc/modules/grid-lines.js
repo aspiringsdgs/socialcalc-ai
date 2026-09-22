@@ -6,15 +6,10 @@
 
 import { getActiveEditor, getActiveSpreadsheet, registerPlugin } from "./plugin-manager.js";
 
-let SocialCalc;
+import { SocialCalcRef } from "./runtime.js";
 
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  SocialCalc = {};
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 let _gridLinesEnabled = false;
 const DEFAULT_GRID_CSS = "1px solid #e2e8f0;";

@@ -41,5 +41,7 @@ export { CellEditModal, FONT_COLORS, BG_COLORS } from "./components/CellEditModa
 export { RowActionPopover } from "./components/RowActionPopover/RowActionPopover.tsx";
 export { EditableCellsModal, parseAppMappingToItems } from "./components/EditableCellsModal/EditableCellsModal.tsx";
 export { DemoVideosModal, FORMULA_GUIDES } from "./components/DemoVideosModal/DemoVideosModal.tsx";
-export { AgentModal } from "./components/AgentModal/AgentModal.tsx";
+export { AgentModal, DEFAULT_GENERIC_SUGGESTIONS, DEFAULT_INVOICE_SUGGESTIONS } from "./components/AgentModal/AgentModal.tsx";
+export { AgentPluginTest, Agentplugintest } from "./components/AgentPluginTest/AgentPluginTest.tsx";
 export { compressImage } from "./utils/imageCompressor.ts";
+

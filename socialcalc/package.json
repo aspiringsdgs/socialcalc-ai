@@ -1,6 +1,6 @@
 {
   "name": "socialcalc-ai",
-  "version": "1.0.3",
+  "version": "1.0.9",
   "description": "Modernized, modular spreadsheet calculation engine and React/Ionic UI suite with AI formula and template capabilities.",
   "type": "module",
   "main": "index.js",
@@ -12,6 +12,16 @@
       "import": "./index.js",
       "default": "./index.js"
     },
+    "./pdf-export": {
+      "types": "./pdf-export.d.ts",
+      "import": "./pdf-export.js",
+      "default": "./pdf-export.js"
+    },
+    "./share": {
+      "types": "./share.d.ts",
+      "import": "./share.js",
+      "default": "./share.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -21,6 +31,10 @@
     "utils",
     "index.js",
     "index.d.ts",
+    "pdf-export.js",
+    "pdf-export.d.ts",
+    "share.js",
+    "share.d.ts",
     "README.md",
     "!**/*.test.ts",
     "!**/*.test.js",
@@ -40,13 +54,25 @@
     "sheets",
     "calc",
     "formula",
-    "msc"
+    "msc",
+    "pdf",
+    "pdf-export",
+    "csv",
+    "print",
+    "email",
+    "share",
+    "capacitor"
   ],
   "author": "Anirudh Sharma",
   "license": "MIT",
+  "dependencies": {
+    "marked": "^15.0.7"
+  },
   "peerDependencies": {
     "@ionic/react": ">=7.0.0",
+    "html2canvas": ">=1.4.0",
     "ionicons": ">=7.0.0",
+    "jspdf": ">=2.5.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
   },
@@ -61,6 +87,12 @@
       "optional": true
     },
     "react-dom": {
+      "optional": true
+    },
+    "html2canvas": {
+      "optional": true
+    },
+    "jspdf": {
       "optional": true
     }
   }

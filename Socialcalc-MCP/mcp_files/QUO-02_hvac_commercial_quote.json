@@ -1,0 +1,14 @@
+{
+  "numsheets": 1,
+  "currentid": "sheet1",
+  "currentname": "hvacquote",
+  "sheetArr": {
+    "sheet1": {
+      "sheetstr": {
+        "savestr": "version:1.5\nsheet:c:1:r:1\n"
+      },
+      "name": "hvacquote",
+      "hidden": "0"
+    }
+  }
+}

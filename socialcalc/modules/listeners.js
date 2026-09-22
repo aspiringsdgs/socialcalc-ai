@@ -1,15 +1,9 @@
 // Cell change listeners and event handling
-let SocialCalc;
+import { SocialCalcRef, buildSetValueCommands } from "./runtime.js";
+import { on as onBusEvent } from "./events.js";
 
-// Ensure SocialCalc is loaded from the global scope
-if (typeof window !== "undefined" && window.SocialCalc) {
-  SocialCalc = window.SocialCalc;
-} else if (typeof global !== "undefined" && global.SocialCalc) {
-  SocialCalc = global.SocialCalc;
-} else {
-  console.error("SocialCalc not found in global scope");
-  SocialCalc = {}; // Fallback to prevent errors
-}
+// Live reference to the global SocialCalc object (never a stale import-time copy)
+let SocialCalc = SocialCalcRef;
 
 import { enhancedShowPrompt } from "./prompts.js";
 import { registerPlugin } from "./plugin-manager.js";
@@ -480,34 +474,16 @@ function triggerCustomModal(editor) {
 
   // Callback when user confirms edit in Modal
   const handleOk = (newValue) => {
-    let cmd = "";
-    if (typeof newValue === "string" && newValue.startsWith("=")) {
-      cmd = `set ${coord} formula ${newValue.slice(1)}`;
-    } else {
-      const isNum = !isNaN(Number(newValue)) && newValue.trim() !== "";
-      if (isNum) {
-        cmd = `set ${coord} value n ${newValue}`;
-      } else {
-        const isHtml = /<[a-z][\s\S]*>/i.test(newValue);
-        if (isHtml) {
-          cmd = `set ${coord} text th ${newValue}\nset ${coord} textvalueformat text-html`;
-        } else {
-          cmd = `set ${coord} text t ${newValue}`;
-        }
-      }
-    }
+    if (!runBeforeCellCommit(coord, newValue)) return false;
 
-    // Schedule command on active editor
+    // Encoded value commands (text with ":", "\" or newlines stays intact)
+    const cmd = buildSetValueCommands(coord, newValue === undefined ? "" : newValue).join("\n");
+
+    // Schedule command on active editor; the event bus emits "socialcalc:cell-change" once it has run
     if (editor.EditorScheduleSheetCommands) {
       editor.EditorScheduleSheetCommands(cmd, true, false);
     }
-
-    // Dispatch cell change event
-    window.dispatchEvent(
-      new CustomEvent("socialcalc:cell-change", {
-        detail: { coord, value: newValue }
-      })
-    );
+    return true;
   };
 
   // Dispatch custom event for React to show bottom sheet Modal
@@ -527,39 +503,41 @@ function triggerCustomModal(editor) {
 }
 
 /**
- * Setup a callback listener for cell value changes.
- * Returns a cleanup function to remove the listener.
+ * Calls `callback(coord, detail)` whenever cells change, from any source: the edit modal,
+ * the built-in editor, toolbar actions, the workbook API or pasted data.
+ * @param {(coord: string, detail: any) => void} callback
+ * @returns {() => void} cleanup that removes only this listener
  */
 export function setupCellChangeListener(callback) {
-  if (typeof window === "undefined") return () => {};
-
-  const handleCellChange = (e) => {
-    if (callback && e.detail && e.detail.coord) {
-      callback(e.detail.coord);
+  return onBusEvent("cell-change", (detail) => {
+    if (callback && detail && detail.coord) {
+      callback(detail.coord, detail);
     }
-  };
+  });
+}
 
-  window.addEventListener("socialcalc:cell-change", handleCellChange);
+const _beforeCellCommitHooks = new Set();
 
-  let origStatusCallback = null;
-  if (window.SocialCalc && window.SocialCalc.EditorSheetStatusCallback) {
-    origStatusCallback = window.SocialCalc.EditorSheetStatusCallback;
-    window.SocialCalc.EditorSheetStatusCallback = function (recalcdata, status, arg, editor) {
-      if (origStatusCallback) {
-        origStatusCallback.apply(this, arguments);
-      }
-      if (status === "done" && arg && callback) {
-        callback(arg);
-      }
-    };
+/**
+ * Registers a check that runs before the edit modal commits a value.
+ * Return false from the hook to reject the edit (used by the data validation plugin).
+ * @param {(coord: string, value: any) => boolean | void} hook
+ * @returns {() => void} unregister
+ */
+export function addBeforeCellCommitHook(hook) {
+  _beforeCellCommitHooks.add(hook);
+  return () => _beforeCellCommitHooks.delete(hook);
+}
+
+function runBeforeCellCommit(coord, value) {
+  for (const hook of _beforeCellCommitHooks) {
+    try {
+      if (hook(coord, value) === false) return false;
+    } catch (err) {
+      console.error("[SocialCalc] before-commit hook threw:", err);
+    }
   }
-
-  return () => {
-    window.removeEventListener("socialcalc:cell-change", handleCellChange);
-    if (origStatusCallback && window.SocialCalc) {
-      window.SocialCalc.EditorSheetStatusCallback = origStatusCallback;
-    }
-  };
+  return true;
 }
 
 // Auto-initialize mouse listener if in browser environment
