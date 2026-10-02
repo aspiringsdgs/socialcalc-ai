@@ -715,6 +715,7 @@
         format_defs,
         format_string
     ) {
+        var ampstr;
         var scfn = SocialCalc.FormatNumber;
 
         var thisformat, section, sectionfinfo;

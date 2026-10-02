@@ -2035,6 +2035,7 @@
     };
 
     SocialCalc.ProcessEditorColsizeMouseUp = function (e) {
+        var element;
         var event = e || window.event;
         var mouseinfo = SocialCalc.EditorMouseInfo;
         var editor = mouseinfo.editor;
@@ -2312,6 +2313,7 @@
     };
 
     SocialCalc.EditorOpenCellEdit = function (editor) {
+        var f;
         var wval;
 
         if (!editor.ecell) return true; // no ecell
@@ -2695,6 +2697,7 @@
     //
 
     SocialCalc.EditorApplySetCommandsToRange = function (editor, cmd) {
+        var coord;
         var cell, row, col, line, errortext;
 
         var sheetobj = editor.context.sheetobj;
@@ -4626,6 +4629,7 @@
         company,
         val
     ) {
+        var cmdline;
         // alert('changecontact called');
         //var wval = editor.workingvalues;
         if (name != "") {

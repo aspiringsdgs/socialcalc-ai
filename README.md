@@ -29,4 +29,4 @@ The `src/components/socialcalc/core/` directory contains the following modulariz
 > - **Modular Loading**: Ability to load only required functionality
 > - **Better Testing**: Individual modules can be tested in isolation
 
-# Socialcalc-AI-JS-Framework
+# socialcalc-ai

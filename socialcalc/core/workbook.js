@@ -1958,6 +1958,7 @@
   };
 
   SocialCalc.WorkBookControlMove = function (direction) {
+    var button;
     var control = SocialCalc.GetCurrentWorkBookControl();
     if (control.workbook.spreadsheet.editor.state != "start") {
       return;
@@ -2385,6 +2386,7 @@
   };
 
   SocialCalc.ScriptCheck = function (sheetid, coord, text) {
+    var script;
     var commentstart = text.indexOf("<!--script");
     var commentend = text.indexOf("script-->");
     if (commentstart != -1 && commentend != -1) {

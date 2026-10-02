@@ -613,6 +613,7 @@
     };
 
     SocialCalc.Popup.Types.List.SetValue = function (type, id, value) {
+        var o;
         var i;
 
         var sp = SocialCalc.Popup;
@@ -1073,6 +1074,7 @@
         id,
         disabled
     ) {
+        var img, pos;
         var i;
 
         var sp = SocialCalc.Popup;

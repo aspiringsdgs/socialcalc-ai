@@ -109,7 +109,7 @@ npm install @capacitor/filesystem @capacitor/share capacitor-email-composer @bcy
 
 #### Links
 - npm: [npmjs.com/package/socialcalc-ai](https://www.npmjs.com/package/socialcalc-ai)
-- Source: [github.com/its-me-ani/Socialcalc-AI-JS-Framework](https://github.com/its-me-ani/Socialcalc-AI-JS-Framework)
+- Source: [github.com/aspiringsdgs/socialcalc-ai](https://github.com/aspiringsdgs/socialcalc-ai)
     `,
     codeSnippet: {
       language: "bash",

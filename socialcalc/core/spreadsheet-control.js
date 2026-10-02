@@ -3268,6 +3268,7 @@ SocialCalc.SpreadsheetCmdTable = {
     line,
     flags
   ) {
+    var sele;
     var parts, ele;
 
     var spreadsheet = SocialCalc.GetSpreadsheetControlObject();
@@ -3493,6 +3494,7 @@ SocialCalc.SpreadsheetCmdTable = {
   // Clipboard
 
   SocialCalc.SpreadsheetControlClipboardOnclick = function (s, t) {
+    var clipele;
     var s = SocialCalc.GetSpreadsheetControlObject();
     clipele = document.getElementById(s.idPrefix + "clipboardtext");
     document.getElementById(s.idPrefix + "clipboardformat-tab").checked = true;
@@ -3504,6 +3506,7 @@ SocialCalc.SpreadsheetCmdTable = {
   };
 
   SocialCalc.SpreadsheetControlClipboardFormat = function (which) {
+    var clipele;
     var s = SocialCalc.GetSpreadsheetControlObject();
     clipele = document.getElementById(s.idPrefix + "clipboardtext");
     clipele.value = SocialCalc.ConvertSaveToOtherFormat(
@@ -3711,6 +3714,7 @@ SocialCalc.SpreadsheetCmdTable = {
     spreadsheet,
     str
   ) {
+    var line, pnum;
     var pos1,
       mpregex,
       searchinfo,
@@ -3848,6 +3852,7 @@ SocialCalc.SpreadsheetCmdTable = {
   //
 
   SocialCalc.SettingsControlLoadPanel = function (panelobj, attribs) {
+    var ctrl;
     var ctrlname;
     var sc = SocialCalc.SettingsControls;
 
@@ -3864,6 +3869,7 @@ SocialCalc.SpreadsheetCmdTable = {
   //
 
   SocialCalc.SettingsControlUnloadPanel = function (panelobj) {
+    var ctrl;
     var ctrlname;
     var sc = SocialCalc.SettingsControls;
     var attribs = {};

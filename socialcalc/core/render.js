@@ -1183,6 +1183,7 @@
     };
 
     SocialCalc.Lookup = function (value, list) {
+        var i;
         for (i = 0; i < list.length; i++) {
             if (list[i] > value) {
                 if (i > 0) return i - 1;
@@ -1876,6 +1877,7 @@
     //
 
     SocialCalc.ParseCellLinkText = function (str) {
+        var wsend;
         var result = {
             url: "",
             desc: "",

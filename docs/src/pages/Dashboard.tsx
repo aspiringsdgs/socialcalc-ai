@@ -75,7 +75,7 @@ export const Dashboard: React.FC = () => {
           <span className="dash-eyebrow"><Sparkles size={14} /> Open source · MIT</span>
           <h1>Spreadsheets that AI can read, write and build.</h1>
           <p>
-            SocialCalc AI is Dan Bricklin's SocialCalc engine rebuilt as ES modules, with React &amp; Ionic
+            SocialCalc AI is the SocialCalc engine rebuilt as ES modules, with React &amp; Ionic
             components, an AI agent plugin and an MCP server that lets Claude, Cursor and other agents create
             real workbooks.
           </p>
@@ -234,7 +234,7 @@ SC.enableTouchScroll();`}
 
       <footer className="dash-footer">
         <div>
-          <Rocket size={14} /> SocialCalc AI. Original SocialCalc engine by Dan Bricklin and Socialtext. Modernized by Anirudh Sharma. MIT License.
+          <Rocket size={14} /> SocialCalc AI. Original SocialCalc engine modernized by Anirudh Sharma. MIT License.
         </div>
         <div className="dash-footer-links">
           <Link to="/socialcalc">SocialCalc docs</Link>

@@ -301,6 +301,7 @@
         foperand,
         sheet
     ) {
+        var criterianum, v1;
         var value1,
             tostype,
             cr,
@@ -1616,6 +1617,7 @@
         foperand,
         sheet
     ) {
+        var fulltext, newtext, oldpos, oldtext, pos, which;
         var i, value, offset, len, start, count;
         var scf = SocialCalc.Formula;
         var result = 0;
@@ -3134,6 +3136,7 @@
         foperand,
         sheet
     ) {
+        var delta, epsilon;
         var resulttype, result, dval, evalue, fval;
         var pv,
             fv,

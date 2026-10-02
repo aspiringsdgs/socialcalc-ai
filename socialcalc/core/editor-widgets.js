@@ -210,6 +210,7 @@
     };
 
     SocialCalc.CellHandlesMouseMoveOnHandle = function (e) {
+        var editor;
         var scc = SocialCalc.Constants;
 
         var event = e || window.event;
@@ -277,6 +278,7 @@
     //
 
     SocialCalc.SegmentDivHit = function (segtable, divWithMouseHit, x, y) {
+        var quadrant;
         var width = divWithMouseHit.offsetWidth;
         var height = divWithMouseHit.offsetHeight;
         var left = divWithMouseHit.offsetLeft;
@@ -414,6 +416,7 @@
     };
 
     SocialCalc.CellHandlesHoverTimeout = function () {
+        var editor;
         editor = SocialCalc.Keyboard.focusTable; // get TableEditor doing keyboard stuff
         if (!editor) return true; // we're not handling it -- let browser do default
         var cellhandles = editor.cellhandles;
@@ -429,6 +432,7 @@
     };
 
     SocialCalc.CellHandlesTooltipsTimeout = function () {
+        var editor;
         editor = SocialCalc.Keyboard.focusTable; // get TableEditor doing keyboard stuff
         if (!editor) return true; // we're not handling it -- let browser do default
         var cellhandles = editor.cellhandles;
@@ -1538,6 +1542,7 @@
     //
 
     SocialCalc.TCPSDragFunctionStart = function (event, draginfo, dobj) {
+        var col, row;
         var editor = dobj.functionobj.control.editor;
         var scc = SocialCalc.Constants;
 

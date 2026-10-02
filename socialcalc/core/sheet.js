@@ -1391,6 +1391,7 @@
     //
 
     SocialCalc.EncodeSheetAttributes = function (sheet) {
+        var parts;
         var value;
         var attribs = sheet.attribs;
         var result = {};
@@ -1992,6 +1993,7 @@
     //
 
     SocialCalc.ExecuteSheetCommand = function (sheet, cmd, saveundo) {
+        var slast;
         if (typeof cmd === "string") {
             cmd = new SocialCalc.Parse(cmd);
         }
@@ -2623,6 +2625,7 @@
                 }
 
                 sortfunction = function (a, b) {
+                    var tb;
                     // a comparison function that can handle all the type variations
                     var i, a1, b1, ta, cresult;
                     for (i = 0; i <= lastsortcol; i++) {
