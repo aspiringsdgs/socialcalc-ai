@@ -12,12 +12,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anisharma07/socialcalc-mcp.git"
+    "url": "git+https://github.com/aspiringsdgs/socialcalc-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/anisharma07/socialcalc-mcp/issues"
+    "url": "https://github.com/aspiringsdgs/socialcalc-mcp/issues"
   },
-  "homepage": "https://github.com/anisharma07/socialcalc-mcp#readme",
+  "homepage": "https://github.com/aspiringsdgs/socialcalc-mcp#readme",
   "keywords": [
     "mcp",
     "mcp-server",

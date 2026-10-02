@@ -13,7 +13,7 @@ export const PACKAGES = {
     name: "socialcalc-mcp",
     version: "1.0.6",
     npm: "https://www.npmjs.com/package/socialcalc-mcp",
-    github: "https://github.com/anisharma07/socialcalc-mcp",
+    github: "https://github.com/aspiringsdgs/socialcalc-mcp",
     install: "npx -y socialcalc-mcp",
   },
 } as const;

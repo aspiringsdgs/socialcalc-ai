@@ -84,7 +84,7 @@ npm install -g socialcalc-mcp
 socialcalc-mcp
 
 # From source
-git clone https://github.com/anisharma07/socialcalc-mcp.git
+git clone https://github.com/aspiringsdgs/socialcalc-mcp.git
 cd socialcalc-mcp
 npm install
 npm run build

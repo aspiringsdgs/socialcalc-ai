@@ -1,11 +1,11 @@
 # 📊 SocialCalc MCP Server
 
 [![npm version](https://img.shields.io/npm/v/socialcalc-mcp.svg?style=flat-up)](https://www.npmjs.com/package/socialcalc-mcp)
-[![License](https://img.shields.io/github/license/anisharma07/socialcalc-mcp.svg)](https://github.com/anisharma07/socialcalc-mcp/blob/main/LICENSE)
-[![GitHub Issues](https://img.shields.io/github/issues/anisharma07/socialcalc-mcp.svg)](https://github.com/anisharma07/socialcalc-mcp/issues)
+[![License](https://img.shields.io/github/license/aspiringsdgs/socialcalc-mcp.svg)](https://github.com/aspiringsdgs/socialcalc-mcp/blob/main/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/aspiringsdgs/socialcalc-mcp.svg)](https://github.com/aspiringsdgs/socialcalc-mcp/issues)
 
 🔗 **NPM Package**: [https://www.npmjs.com/package/socialcalc-mcp](https://www.npmjs.com/package/socialcalc-mcp)  
-📁 **GitHub Repository**: [https://github.com/anisharma07/socialcalc-mcp](https://github.com/anisharma07/socialcalc-mcp)
+📁 **GitHub Repository**: [https://github.com/aspiringsdgs/socialcalc-mcp](https://github.com/aspiringsdgs/socialcalc-mcp)
 
 A Model Context Protocol (MCP) server that provides cell-level and sheet-level spreadsheet editing, styling, and analytical capabilities for SocialCalc workbooks. It allows LLMs and desktop AI environments (such as **Claude Desktop**, **Cursor**, **VS Code**, and **Windsurf**) to programmatically inspect, query, format, and edit spreadsheet grids.
 
@@ -24,7 +24,7 @@ npx socialcalc-mcp
 
 ### 2. Manual Installation & Local Build
 ```bash
-git clone https://github.com/anisharma07/socialcalc-mcp.git
+git clone https://github.com/aspiringsdgs/socialcalc-mcp.git
 cd socialcalc-mcp
 npm install
 npm run build
