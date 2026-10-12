@@ -949,7 +949,7 @@ These exist in the engine today. They were found while documenting it and are **
   node test-socialcalc.js
   ```
 
-- Update this README, `../README.md` and `docs/src/docsData.ts` when public behaviour changes.
+- Update this README, `../README.md` and `docs-site/src/docsData.ts` when public behaviour changes.
 
 ---
 

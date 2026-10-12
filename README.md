@@ -41,7 +41,8 @@ The full API, the React/Ionic components, the plugins (PDF export, share/email/p
 | :--- | :--- |
 | [`socialcalc/`](socialcalc/) | **The published package.** Engine (`core/`), plugins (`modules/`), React/Ionic components (`components/`), utilities, typings |
 | [`src/`](src/) | Demo and test workbench app that exercises the package before release |
-| [`docs/`](docs/) | The documentation website (Vite + React) and the Markdown guides listed below |
+| [`docs/`](docs/) | Markdown guides: setup, description and publish (listed below) |
+| [`docs-site/`](docs-site/) | The documentation website (Vite + React) |
 | [`Socialcalc-MCP/`](Socialcalc-MCP/) | Working copy of the MCP server, with sample workbooks and prompts |
 | [`public/data/`](public/data/) | Sample workbooks used by the demo app |
 | [`.agents/`](.agents/), [`AGENTS.md`](AGENTS.md), [`GEMINI.md`](GEMINI.md) | Rules for AI coding agents working in this repo |
@@ -63,7 +64,7 @@ npm run dev          # demo app (Vite)
 | `npm run build` | Type-checks and builds the demo app |
 | `npm run test:run` | Runs the Vitest suite once |
 | `node test-socialcalc.js` | Smoke-tests that the core engine loads in Node |
-| `cd docs && npm install && npm run dev` | Runs the documentation website on port 5174 |
+| `cd docs-site && npm install && npm run dev` | Runs the documentation website on port 5174 |
 
 ## Documentation
 
@@ -75,7 +76,7 @@ Guides in [`docs/`](docs/):
 
 ## Contributing
 
-Open an [issue](https://github.com/aspiringsdgs/socialcalc-ai/issues) or a pull request. When you change anything in `socialcalc/`, also update `socialcalc/README.md` and `docs/src/docsData.ts`, and run the tests and the build; [`AGENTS.md`](AGENTS.md) has the full rules, including backward compatibility of exports.
+Open an [issue](https://github.com/aspiringsdgs/socialcalc-ai/issues) or a pull request. When you change anything in `socialcalc/`, also update `socialcalc/README.md` and `docs-site/src/docsData.ts`, and run the tests and the build; [`AGENTS.md`](AGENTS.md) has the full rules, including backward compatibility of exports.
 
 ## License
 

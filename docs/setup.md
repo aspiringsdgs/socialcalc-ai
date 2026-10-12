@@ -110,16 +110,16 @@ npm run dev
 
 ### Documentation website
 
-The site in `docs/` is a separate Vite app with its own dependencies:
+The site in `docs-site/` is a separate Vite app with its own dependencies:
 
 ```bash
-cd docs
+cd docs-site
 npm install
 npm run dev          # http://localhost:5174
 npm run build        # type-check and production build
 ```
 
-Site content is in `docs/src/docsData.ts` (engine) and `docs/src/mcpDocsData.ts` (MCP server). Package versions and links shown on the site are in `docs/src/siteConfig.ts`.
+Site content is in `docs-site/src/docsData.ts` (engine) and `docs-site/src/mcpDocsData.ts` (MCP server). Package versions and links shown on the site are in `docs-site/src/siteConfig.ts`.
 
 ### MCP server working copy
 

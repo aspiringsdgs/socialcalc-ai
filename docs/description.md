@@ -34,7 +34,8 @@ socialcalc-ai/
 │   ├── pdf-export.js  opt-in entry: PDF export
 │   └── share.js       opt-in entry: save, share, email, print
 ├── src/               demo and test app that consumes ./socialcalc
-├── docs/              documentation website and these guides
+├── docs/              Markdown guides: setup, description, publish
+├── docs-site/         documentation website (Vite + React)
 ├── Socialcalc-MCP/    working copy of the MCP server
 └── public/data/       sample workbooks
 ```
@@ -116,7 +117,7 @@ There are two routes:
 | :--- | :--- | :--- |
 | `socialcalc-ai` (npm and GitHub Packages) | `socialcalc/` | This repository, see [publish.md](publish.md) |
 | `socialcalc-mcp` | `Socialcalc-MCP/` copy here, standalone repository | [aspiringsdgs/socialcalc-mcp](https://github.com/aspiringsdgs/socialcalc-mcp) |
-| Documentation website | `docs/` | Built from this repository |
+| Documentation website | `docs-site/` | Built from this repository |
 
 ## Engineering rules
 
@@ -124,4 +125,4 @@ There are two routes:
 
 - Exports from `socialcalc/index.js` and `socialcalc/core/index.js` are a public contract: add, do not rename or remove.
 - Never recreate `src/socialcalc`. Features belong in `socialcalc/`.
-- Any change to `socialcalc/` needs the tests, the build, and updates to `socialcalc/README.md` and `docs/src/docsData.ts`.
+- Any change to `socialcalc/` needs the tests, the build, and updates to `socialcalc/README.md` and `docs-site/src/docsData.ts`.

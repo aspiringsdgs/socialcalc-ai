@@ -872,7 +872,7 @@ When modifying or improving any code in \`./socialcalc\`:
 #### 2. Mandatory Documentation Synchronization Rule
 > **CRITICAL RULE**: Whenever you edit, enhance, or fix anything in \`./socialcalc\` (new plugins, updated props, modified APIs, new formulas), you **MUST synchronously update the documentation**:
 > - Update \`socialcalc/README.md\` in the package root.
-> - Update \`docs/src/docsData.ts\` so this documentation website displays the new feature, props, and examples.
+> - Update \`docs-site/src/docsData.ts\` so this documentation website displays the new feature, props, and examples.
 > - Never leave code changes undocumented.
 
 #### 3. Verification Commands
@@ -886,7 +886,7 @@ node test-socialcalc.js  # Modularization integrity check
 ### Showcase app & screenshots
 \`src/\` is a test app that uses every feature of the package through the \`socialcalc\` alias (see \`vite.config.ts\`). Run it with \`npm run dev\` from the repo root and open http://localhost:5173. The toolbar opens every modal, and the pills toggle each plugin.
 
-The screenshots in these docs (\`docs/public/screenshots/live/\`) are captured from that app with Playwright. After changing the UI, regenerate them:
+The screenshots in these docs (\`docs-site/public/screenshots/live/\`) are captured from that app with Playwright. After changing the UI, regenerate them:
 
 \`\`\`bash
 npm run dev                                  # repo root: start the showcase app
@@ -897,13 +897,13 @@ npm run screenshots -- agent                 # one shot: studio-overview, agent,
 \`\`\`
 
 ### This documentation site
-The site is in \`docs/\`. Content lives in data files, one per package:
+The site is in \`docs-site/\`. Content lives in data files, one per package:
 
 | File | Route |
 | :--- | :--- |
-| \`docs/src/docsData.ts\` | \`/socialcalc\` (this page) |
-| \`docs/src/mcpDocsData.ts\` | \`/mcp\` |
-| \`docs/src/siteConfig.ts\` | Package versions, links and the dashboard video |
+| \`docs-site/src/docsData.ts\` | \`/socialcalc\` (this page) |
+| \`docs-site/src/mcpDocsData.ts\` | \`/mcp\` |
+| \`docs-site/src/siteConfig.ts\` | Package versions, links and the dashboard video |
     `,
     codeSnippet: {
       language: "bash",

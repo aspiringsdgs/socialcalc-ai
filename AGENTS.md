@@ -39,7 +39,7 @@
 5. **Mandatory Documentation Synchronization**:
    - Whenever you edit, enhance, or add anything in `./socialcalc` (new plugins, updated component props, modified APIs, new event types, or formula behaviors), you **MUST synchronously update the documentation**:
      - Update `socialcalc/README.md` to document the new API, parameters, or plugin behavior.
-     - Update `docs/src/docsData.ts` (the dedicated documentation web app) so the documentation website displays the new feature, props, and code examples.
+     - Update `docs-site/src/docsData.ts` (the dedicated documentation web app) so the documentation website displays the new feature, props, and code examples.
      - Never leave new features undocumented or allow documentation to fall out of sync with code changes.
 
 ---

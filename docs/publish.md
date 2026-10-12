@@ -7,7 +7,7 @@ How to ship a new version of `socialcalc-ai` to **npm** and **GitHub Packages**.
 | npm | `socialcalc-ai` | The `npm` job in [`publish.yml`](../.github/workflows/publish.yml), using the `NPM_TOKEN` secret |
 | GitHub Packages | `@aspiringsdgs/socialcalc-ai` | The `github-packages` job, using the built-in `GITHUB_TOKEN` |
 
-Only the `socialcalc/` folder is published. The demo app, the docs site and the `Socialcalc-MCP/` copy are not part of the package. The MCP server is released from [aspiringsdgs/socialcalc-mcp](https://github.com/aspiringsdgs/socialcalc-mcp).
+Only the `socialcalc/` folder is published. The demo app, the documentation website (`docs-site/`) and the `Socialcalc-MCP/` copy are not part of the package. The MCP server is released from [aspiringsdgs/socialcalc-mcp](https://github.com/aspiringsdgs/socialcalc-mcp).
 
 Publishing to GitHub Packages is what makes the package appear in this repository's **Packages** sidebar. GitHub only lists packages from its own registry there, never from npmjs.com, and the scope must match the owning organisation. The workflow adds the `@aspiringsdgs` scope at publish time, so the name on npm stays `socialcalc-ai`.
 
@@ -38,7 +38,7 @@ Run these from an up-to-date `main` branch.
    node test-socialcalc.js
    ```
 
-2. **Update the docs.** Add the release to **Release Notes** in `socialcalc/README.md`, and set the new version in `docs/src/siteConfig.ts` (`PACKAGES.socialcalc.version`).
+2. **Update the docs.** Add the release to **Release Notes** in `socialcalc/README.md`, and set the new version in `docs-site/src/siteConfig.ts` (`PACKAGES.socialcalc.version`).
 
 3. **Bump the version** in `socialcalc/package.json`. The package lives in a subfolder of a repository whose root package is private, so edit the version in that file, either by hand or with:
 
