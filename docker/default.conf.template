@@ -26,7 +26,9 @@ server {
 
     # Resolve the backend per request (not at startup), so this container starts, and reports
     # 502/504 instead of crashing, when the backend is down or restarting.
-    resolver ${NGINX_RESOLVER} valid=10s ipv6=off;
+    # valid=2s: a stopped backend disappears from Docker DNS, so after at most ~2 s requests fail fast
+    # with 502 instead of waiting out the connect timeout on a stale address (504).
+    resolver ${NGINX_RESOLVER} valid=2s ipv6=off;
 
     # Container health: answered by nginx itself, independent of the backend.
     location = /healthz {
