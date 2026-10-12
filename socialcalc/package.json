@@ -2,6 +2,15 @@
   "name": "socialcalc-ai",
   "version": "1.0.10",
   "description": "Modernized, modular spreadsheet calculation engine and React/Ionic UI suite with AI formula and template capabilities.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aspiringsdgs/socialcalc-ai.git",
+    "directory": "socialcalc"
+  },
+  "bugs": {
+    "url": "https://github.com/aspiringsdgs/socialcalc-ai/issues"
+  },
+  "homepage": "https://github.com/aspiringsdgs/socialcalc-ai#readme",
   "type": "module",
   "main": "index.js",
   "module": "index.js",

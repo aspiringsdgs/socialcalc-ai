@@ -9,6 +9,14 @@
 
 Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `socialcalc-ai` has been re-architected for modern web, mobile, and AI-driven applications. It replaces legacy global variables with clean ES modules, provides full TypeScript definitions, adds smooth mobile touch physics, and includes a full suite of modern React/Ionic UI controls.
 
+| | |
+| :--- | :--- |
+| **npm** | [`socialcalc-ai`](https://www.npmjs.com/package/socialcalc-ai) |
+| **GitHub Packages** | [`@aspiringsdgs/socialcalc-ai`](https://github.com/aspiringsdgs/socialcalc-ai/pkgs/npm/socialcalc-ai) |
+| **Source** | [aspiringsdgs/socialcalc-ai](https://github.com/aspiringsdgs/socialcalc-ai/tree/main/socialcalc) |
+| **MCP server** | [`socialcalc-mcp`](https://www.npmjs.com/package/socialcalc-mcp) lets AI assistants edit these workbooks ([source](https://github.com/aspiringsdgs/socialcalc-mcp)) |
+| **Issues** | [github.com/aspiringsdgs/socialcalc-ai/issues](https://github.com/aspiringsdgs/socialcalc-ai/issues) |
+
 ---
 
 ## 📑 Table of Contents
