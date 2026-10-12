@@ -465,3 +465,14 @@ ion-modal ion-content {
 .dark-theme .export-hint {
   color: #94a3b8;
 }
+
+/* ── Backend storage (Tornado) controls ─────────────────────────────── */
+.storage-toolbar { display: flex; align-items: center; gap: 8px; padding: 4px 12px; flex-wrap: wrap; }
+.storage-sheet-name { font-weight: 600; margin-right: 8px; }
+.storage-user { font-size: 12px; opacity: 0.7; margin-left: auto; }
+.storage-form { display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
+.storage-form input { padding: 10px; border: 1px solid #aaa; border-radius: 6px; font-size: 14px; }
+.storage-list { width: 100%; border-collapse: collapse; }
+.storage-list td { padding: 6px 8px; border-bottom: 1px solid rgba(128, 128, 128, 0.3); }
+.storage-link { background: none; border: none; color: var(--ion-color-primary, #3880ff); cursor: pointer; font-size: 15px; padding: 0; }
+.storage-meta { font-size: 12px; opacity: 0.7; white-space: nowrap; }

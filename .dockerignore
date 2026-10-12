@@ -1,0 +1,28 @@
+# Keep the build context small and free of secrets/local state.
+.git
+.gitignore
+.github
+.agents
+node_modules
+**/node_modules
+dist
+coverage
+*.log
+*.local
+.env
+.env.*
+!.env.example
+
+# Not needed to build the demo app (the app only imports ./socialcalc and ./src)
+docs
+Socialcalc-MCP
+scripts
+*.md
+!README.md
+AGENTS.md
+GEMINI.md
+LICENSE
+Dockerfile
+.dockerignore
+docker
+!docker/default.conf.template
