@@ -70,3 +70,25 @@ so browser and API share one origin and no CORS is needed.
 
 `npm run test:run` runs the adapter unit tests. `scripts/e2e-tornado-storage.mjs` is a real-UI
 Playwright script (Playwright is not a dependency of this repo; prerequisites are in the file header).
+
+## Docker
+
+A production image (multi-stage build, non-root nginx on port 8080, built-in healthcheck) serves the
+demo app and proxies `/api/*` to the Tornado backend, so the browser sees a single origin.
+
+```bash
+docker build -t socialcalc-ai .
+docker run --rm -p 8081:8080 -e TORNADO_API_URL=http://host.docker.internal:8080 socialcalc-ai
+# open http://localhost:8081
+```
+
+| Variable (runtime) | Default | Meaning |
+|---|---|---|
+| `TORNADO_API_URL` | *(required)* | Tornado origin, no path (in the Tornado compose stack: `http://nginx:80`) |
+| `TORNADO_CONNECT_TIMEOUT` | `5` | Seconds to connect; failure gives 502 JSON |
+| `TORNADO_READ_TIMEOUT` | `60` | Seconds to wait for a response; exceeded gives 504 JSON |
+| `NGINX_RESOLVER` | `127.0.0.11` | DNS server for the per-request backend lookup |
+
+Healthcheck: `GET /healthz` returns `200 ok` and does not depend on the backend, so the container
+stays healthy while Tornado is down (API calls then return 502/504 and recover by themselves).
+No keys or secrets are baked into the image. Full details: [docker/README.md](docker/README.md).
