@@ -1648,7 +1648,19 @@
     // first create a new workbook
     var control = SocialCalc.GetCurrentWorkBookControl();
 
+    // CreateNewBook keeps the active sheet; make that the first tab so the loaded file's first
+    // sheet lands in the first sheet id (normally "sheet1") rather than whichever tab was open
+    var firstButtonId = Object.keys(control.sheetButtonArr)[0];
+    if (firstButtonId && control.currentSheetButton && control.currentSheetButton.id !== firstButtonId) {
+      SocialCalc.WorkBookControlActivateSheet(firstButtonId);
+    }
+
     SocialCalc.WorkBookControlCreateNewBook();
+
+    // Restart the id counter from the one remaining sheet, so reloading does not mint new ids
+    // (sheet5, sheet6...) every time; saved ids are reused below where possible
+    var remainingNum = parseInt(String(control.currentSheetButton.id).substring(5), 10);
+    control.sheetCnt = isNaN(remainingNum) ? control.numSheets : remainingNum;
 
     // at this point there is one sheet, and 1 button
     // create the sequence of buttons, and sheets
@@ -1688,8 +1700,15 @@
         // need to also set the formula cache
         currentsheetid = sheetid;
       } else {
-        sheetid = "sheet" + (control.sheetCnt + 1).toString();
-        control.sheetCnt = control.sheetCnt + 1;
+        // Keep the saved sheet id when it is free, so data keyed by sheet id (app mappings,
+        // editable cells, footers) still matches after a reload
+        if (/^sheet\d+$/.test(sheet) && !control.sheetButtonArr[sheet] && !control.workbook.sheetArr[sheet]) {
+          sheetid = sheet;
+        } else {
+          sheetid = "sheet" + (control.sheetCnt + 1).toString();
+        }
+        var sheetNum = parseInt(sheetid.substring(5), 10);
+        if (sheetNum > control.sheetCnt) control.sheetCnt = sheetNum;
         SocialCalc.WorkBookControlAddSheetButton(
           sheetsave.sheetArr[sheet].name,
           sheetid
@@ -1732,7 +1751,13 @@
         SocialCalc.EditableCells.allow = false;
       }
     }
+    // Open the saved current sheet shortly after loading, unless the app (or user) has already
+    // switched sheets in the meantime: apps often load and then pick a tab right away, and this
+    // delayed activation used to undo that choice 200 ms later
+    var sheetAtLoad = control.currentSheetButton ? control.currentSheetButton.id : null;
     var timeoutFn = function () {
+      var now = control.currentSheetButton ? control.currentSheetButton.id : null;
+      if (now !== sheetAtLoad) return;
       SocialCalc.WorkBookControlActivateSheet(currentsheetid);
     };
     window.setTimeout(timeoutFn, 200);

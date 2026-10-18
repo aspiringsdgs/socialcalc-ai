@@ -17,7 +17,7 @@
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
-import { registerPlugin } from "./plugin-manager.js";
+import { registerPlugin, notifyPluginStateChange } from "./plugin-manager.js";
 import { getCurrentSheetId } from "./runtime.js";
 import { getCurrentHTMLContent, getAllSheetsData } from "./sheets.js";
 import { blobToBase64 } from "./exporters.js";
@@ -351,6 +351,7 @@ export const pdfBlobToBase64 = blobToBase64;
 export function enablePdfExport(options) {
   _pdfExportEnabled = true;
   if (options && typeof options === "object") configurePdfExport(options);
+  notifyPluginStateChange("pdfExport");
 }
 
 /**
@@ -358,6 +359,7 @@ export function enablePdfExport(options) {
  */
 export function disablePdfExport() {
   _pdfExportEnabled = false;
+  notifyPluginStateChange("pdfExport");
 }
 
 export function isPdfExportEnabled() {

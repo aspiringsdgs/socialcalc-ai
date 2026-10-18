@@ -347,6 +347,85 @@ export function buildSetValueCommands(coord, raw, options = {}) {
   return [`set ${coord} text t ${encodeCommandText(str)}`];
 }
 
+/**
+ * The text an editor should show for a cell: "=formula" for formulas, the original typed
+ * text for typed constants ("$1,200", "12%", dates), the raw text or number otherwise.
+ * @param {any} sheet - SocialCalc.Sheet
+ * @param {string} coord
+ * @returns {string}
+ */
+export function getCellEditText(sheet, coord) {
+  const cell = sheet && sheet.cells ? sheet.cells[coord] : null;
+  if (!cell) return "";
+  switch (cell.datatype) {
+    case "f":
+      return "=" + cell.formula;
+    case "c":
+      return cell.formula != null ? String(cell.formula) : String(cell.datavalue ?? "");
+    case "t":
+    case "v":
+      return cell.datavalue != null ? String(cell.datavalue) : "";
+    default:
+      return "";
+  }
+}
+
+/**
+ * True when `el` is a rendered grid data cell rather than a row/column header.
+ * Data cells carry an id like "cell_D12"; header cells have none.
+ * @param {any} el
+ * @returns {boolean}
+ */
+export function isDataCellElement(el) {
+  const sc = getSocialCalc();
+  const prefix = (sc && sc.Constants && sc.Constants.defaultCellIDPrefix) || "cell_";
+  return Boolean(el && typeof el.id === "string" && el.id.indexOf(prefix) === 0);
+}
+
+/**
+ * Schedules sheet commands without racing the engine. On the active sheet the commands wait
+ * in the editor's queue while it is busy (a command, recalc or render is running), the same
+ * way the built-in editor queues them; scheduling straight onto a busy sheet would overwrite
+ * the command that is still running. Commands for another sheet go through the workbook.
+ * Unlike EditorScheduleSheetCommands this also runs while a cell is open for editing.
+ * @param {string} cmdstr
+ * @param {{ saveundo?: boolean, sheet?: string }} [options]
+ * @returns {boolean} false when the spreadsheet or the sheet does not exist
+ */
+export function scheduleSheetCommands(cmdstr, options = {}) {
+  const { saveundo = true, sheet } = options;
+  if (!cmdstr) return false;
+  const control = getWorkbookControl();
+  const editor = getEditor();
+  const currentId = getCurrentSheetId();
+  const targetId = sheet === undefined || sheet === null ? currentId : resolveSheetId(sheet);
+
+  if (editor && editor.context && editor.context.sheetobj && targetId === currentId) {
+    // A command whose timer has not fired yet also counts as busy: the engine has a single
+    // SheetCommandInfo, and scheduling now would replace the pending command. Its "cmdend"
+    // drains the queue.
+    const sc = getSocialCalc();
+    const commandPending = !!(sc && sc.SheetCommandInfo && sc.SheetCommandInfo.timerobj);
+    if ((editor.busy || commandPending) && Array.isArray(editor.deferredCommands)) {
+      editor.deferredCommands.push({ cmdstr, saveundo });
+    } else {
+      editor.context.sheetobj.ScheduleSheetCommands(cmdstr, saveundo);
+    }
+    return true;
+  }
+  const sheetArr = control && control.workbook && control.workbook.sheetArr;
+  if (
+    control &&
+    targetId &&
+    typeof control.ExecuteWorkBookControlCommand === "function" &&
+    (!sheetArr || sheetArr[targetId])
+  ) {
+    control.ExecuteWorkBookControlCommand({ cmdtype: "scmd", id: targetId, cmdstr, saveundo }, false);
+    return true;
+  }
+  return false;
+}
+
 // ─── Fonts and colors ───────────────────────────────────────────────────────
 
 /**

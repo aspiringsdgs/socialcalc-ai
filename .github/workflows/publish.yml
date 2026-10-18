@@ -53,9 +53,15 @@ jobs:
             exit 1
           fi
 
-      # The package is plain JavaScript, so there is nothing to build. GitHub
-      # Packages only accepts packages scoped to the owner, so the scope is added
-      # here instead of changing the name that is published to npm.
+      # `npm publish` runs the package's prepublishOnly script, which runs the
+      # library tests and builds dist/ (the files that ship). Both need the
+      # repository's dev dependencies (vitest, jsdom, esbuild) from the root.
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
+
+      # GitHub Packages only accepts packages scoped to the owner, so the scope is
+      # added here instead of changing the name that is published to npm.
       - name: Publish to GitHub Packages
         run: |
           npm pkg set name=@aspiringsdgs/socialcalc-ai
@@ -96,6 +102,11 @@ jobs:
             echo "::error::Release tag ${{ github.event.release.tag_name }} does not match socialcalc/package.json version ($expected)"
             exit 1
           fi
+
+      # prepublishOnly runs the library tests and builds dist/; it needs the root dev dependencies
+      - name: Install dependencies
+        working-directory: .
+        run: npm ci
 
       - name: Publish to npm
         run: npm publish --access public

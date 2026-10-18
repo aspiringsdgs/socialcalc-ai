@@ -11,7 +11,7 @@
  * 4. Extensible Registry: Ready for future agent expansion (styling, formatting, borders, merge/unmerge).
  */
 
-import { registerPlugin, getActiveEditor, getActiveSpreadsheet } from "./plugin-manager.js";
+import { registerPlugin, getActiveEditor, getActiveSpreadsheet, notifyPluginStateChange } from "./plugin-manager.js";
 import { getAppMapping } from "./editable-cells.js";
 
 import { SocialCalcRef } from "./runtime.js";
@@ -61,6 +61,7 @@ export function enableAgent(options = {}) {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isAgentEnabled = () => true;
   }
+  notifyPluginStateChange("agent");
 }
 
 /**
@@ -72,6 +73,7 @@ export function disableAgent() {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isAgentEnabled = () => false;
   }
+  notifyPluginStateChange("agent");
 }
 
 /**
@@ -90,6 +92,7 @@ export function toggleAgent(forceState) {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isAgentEnabled = () => _agentEnabled;
   }
+  notifyPluginStateChange("agent");
   return _agentEnabled;
 }
 

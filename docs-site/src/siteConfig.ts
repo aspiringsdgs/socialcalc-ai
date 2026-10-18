@@ -4,7 +4,7 @@
 export const PACKAGES = {
   socialcalc: {
     name: "socialcalc-ai",
-    version: "1.0.10",
+    version: "1.1.0",
     npm: "https://www.npmjs.com/package/socialcalc-ai",
     github: "https://github.com/aspiringsdgs/socialcalc-ai",
     install: "npm install socialcalc-ai",

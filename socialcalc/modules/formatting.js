@@ -6,6 +6,7 @@ import {
   buildSetValueCommands,
   mergeFontValue,
   parseFontValue,
+  scheduleSheetCommands,
 } from "./runtime.js";
 
 function getSocialCalc() {
@@ -109,16 +110,22 @@ export function applySelectedFormatting(coord, formatting) {
  * @param {string} coord
  * @param {any} val - Number, "=formula", HTML, text, "" (clears) or null/undefined (value unchanged).
  * @param {{ fontSize?: string, fontColor?: any, bgColor?: any, borders?: { top?: string, bottom?: string, left?: string, right?: string }, valueFormat?: string }} [formatting]
+ * @param {{ detectTypes?: boolean }} [options] - detectTypes stores typed text such as "$1,200",
+ *   "12%" or "1/2/2020" as numbers, the way the built-in cell editor does (default false).
+ * @returns {boolean} true when commands were scheduled
  */
-export function updateCellValueAndFormat(coord, val, formatting) {
+export function updateCellValueAndFormat(coord, val, formatting, options = {}) {
   const control = getWorkbookControl();
-  if (!control) return;
-  const editor = control.workbook.spreadsheet.editor;
+  if (!control) return false;
 
   const cmds = [];
 
   if (val !== null && val !== undefined) {
-    cmds.push(...buildSetValueCommands(coord, typeof val === "number" ? val : val.toString()));
+    cmds.push(
+      ...buildSetValueCommands(coord, typeof val === "number" ? val : val.toString(), {
+        detectTypes: !!options.detectTypes,
+      })
+    );
   }
 
   if (formatting) {
@@ -147,22 +154,10 @@ export function updateCellValueAndFormat(coord, val, formatting) {
     }
   }
 
-  if (cmds.length === 0) return;
+  if (cmds.length === 0) return false;
 
-  const cmdstr = cmds.join("\n");
-  if (control.ExecuteWorkBookControlCommand) {
-    control.ExecuteWorkBookControlCommand(
-      {
-        cmdtype: "scmd",
-        id: control.currentSheetButton ? control.currentSheetButton.id : "sheet1",
-        cmdstr,
-        saveundo: true,
-      },
-      false
-    );
-  } else {
-    editor.EditorScheduleSheetCommands(cmdstr, true, false);
-  }
+  // Queued behind any running command/recalc instead of overwriting it
+  return scheduleSheetCommands(cmds.join("\n"), { saveundo: true });
 }
 
 /**

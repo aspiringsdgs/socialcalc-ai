@@ -54,7 +54,7 @@ Run these from an up-to-date `main` branch.
    cd socialcalc && npm pack --dry-run && cd ..
    ```
 
-   Only `core/`, `modules/`, `components/`, `utils/`, the entry files, typings and `README.md` should be listed, with no test files.
+   Only `dist/` (compiled `core/`, `modules/`, `components/`, `utils/`, the entry files and typings) and `README.md` should be listed, with no test files or `.ts`/`.tsx` sources. `npm pack` does not build, so run `npm run build` in `socialcalc/` first if `dist/` is missing or stale.
 
 5. **Commit, tag and push.** The tag must be `v` plus the version.
 
@@ -90,7 +90,8 @@ Replace `v1.0.11` in the examples with your version.
 ## What the workflow checks
 
 - The release tag must equal `v` plus the `version` in `socialcalc/package.json`. A mismatch fails the job before anything is published.
-- It publishes from the `socialcalc/` directory, using the `files` list in `socialcalc/package.json`. There is no build step because the package ships source files.
+- It installs the repository's dependencies (`npm ci` at the root) and publishes from the `socialcalc/` directory, using the `files` list in `socialcalc/package.json`.
+- `npm publish` runs the package's `prepublishOnly` script first: the library test suites (`npm run test:lib`) and the build of `dist/`. A failing test stops the release before anything is published.
 
 ## Publishing to one registry only
 
@@ -104,7 +105,7 @@ A manual run publishes whatever version is in `socialcalc/package.json` on the b
 
 ## Publishing by hand
 
-Only needed if Actions is unavailable. Run from `socialcalc/`.
+Only needed if Actions is unavailable. Install the root dependencies once (`npm ci` in the repository root), then run from `socialcalc/`. `npm publish` runs the tests and builds `dist/` itself.
 
 **npm**
 
@@ -138,5 +139,6 @@ git checkout package.json          # undo the temporary rename
 | `E403 ... cannot publish over the previously published versions` | That version already exists. Bump and publish again |
 | `E401` or `E404` on the GitHub Packages job | Confirm the job has `packages: write` and that `repository.url` in `socialcalc/package.json` points to this repository |
 | Release tag does not match package.json version | Delete the release and tag, fix the version, and create the release again |
-| `npm run test:run` fails | Fix the failing test before releasing. Releases are not gated on tests in CI, so this check is manual |
+| `npm run test:run` fails | Fix the failing test before releasing. The library suites also run in CI (`prepublishOnly`) and block the publish |
+| `vitest: not found` or `Cannot find package 'esbuild'` during publish | The root dependencies are missing: run `npm ci` in the repository root before `npm publish` |
 | Package is not in the repository sidebar | It appears after the first successful GitHub Packages publish. Check the organisation's packages page and that the package is linked to this repository |

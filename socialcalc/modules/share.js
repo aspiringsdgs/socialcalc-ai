@@ -22,7 +22,7 @@
  * Import from "socialcalc-ai/share".
  */
 
-import { registerPlugin, getPlugin } from "./plugin-manager.js";
+import { registerPlugin, getPlugin, notifyPluginStateChange } from "./plugin-manager.js";
 import { getCurrentHTMLContent } from "./sheets.js";
 import { downloadBlob, blobToBase64 } from "./exporters.js";
 
@@ -413,10 +413,12 @@ export function configureShare(config = {}) {
 export function enableShare(config) {
   _shareEnabled = true;
   if (config && typeof config === "object") configureShare(config);
+  notifyPluginStateChange("share");
 }
 
 export function disableShare() {
   _shareEnabled = false;
+  notifyPluginStateChange("share");
 }
 
 export function isShareEnabled() {

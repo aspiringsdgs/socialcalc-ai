@@ -31,10 +31,13 @@
 4. **Testing is Mandatory Before Completing Any Task**:
    - Any modification to `socialcalc/` MUST pass:
      ```bash
-     npm test -- --run     # Vitest unit tests
+     npm test -- --run     # Vitest: library suites + demo-app tests
      npm run build         # TypeScript compilation & Vite bundle validation
      node test-socialcalc.js # Node engine integrity check
      ```
+   - Library suites live in `socialcalc/tests/` (`smoke/`, `modules/`, `components/`, `regression/`) and run on their own with `npm run test:smoke`, `test:modules`, `test:components`, `test:regression` or `test:lib`. See `socialcalc/tests/README.md`.
+   - New behavior gets a test in `tests/modules/` (or `tests/components/` for UI); every bug fix gets a test in `tests/regression/` that fails without the fix.
+   - Publishing runs `test:lib` and then builds `dist/` (`prepublishOnly`); the dev app and tests always use the sources, never `dist/`.
 
 5. **Mandatory Documentation Synchronization**:
    - Whenever you edit, enhance, or add anything in `./socialcalc` (new plugins, updated component props, modified APIs, new event types, or formula behaviors), you **MUST synchronously update the documentation**:
