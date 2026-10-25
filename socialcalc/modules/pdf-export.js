@@ -135,6 +135,17 @@ function createOffscreenContainer(htmlContent, extraStyles) {
   return container;
 }
 
+/** True when every pixel of the canvas is (near) white. False when the pixels can't be read. */
+function isBlankCanvas(canvas) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx || typeof ctx.getImageData !== "function" || !canvas.width || !canvas.height) return false;
+  const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] < 250 || data[i + 1] < 250 || data[i + 2] < 250) return false;
+  }
+  return true;
+}
+
 /**
  * Renders one HTML block to page-sized canvas slices, split on <tr> boundaries.
  * @returns {Promise<Array<{ canvas: HTMLCanvasElement, heightMm: number }>>}
@@ -203,6 +214,9 @@ async function renderHtmlToSlices(htmlContent, { imgWidthMm, sliceHeightMm, scal
       slices.push({ canvas: sliceCanvas, heightMm: heightPx / pxPerMm });
       sourceY += heightPx;
     }
+
+    // Empty rows at the bottom of a sheet can spill past a page break; don't give them a page of their own
+    while (slices.length > 1 && isBlankCanvas(slices[slices.length - 1].canvas)) slices.pop();
 
     return slices;
   } finally {

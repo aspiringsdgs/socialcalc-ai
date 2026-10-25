@@ -67,7 +67,7 @@ Want AI agents like Claude to build these workbooks for you? See the [SocialCalc
     category: "Getting Started",
     title: "Installation & Package Setup",
     description: "Install socialcalc-ai via npm, yarn, pnpm, or bun with optional peer dependencies.",
-    badge: "npm v1.1.0",
+    badge: "npm v1.1.2",
     content: `
 ### Installing SocialCalc AI
 
@@ -683,6 +683,8 @@ Templates such as \`src/data/100001.json\` wrap the workbook with what an app ne
 | \`appMapping\` | Named fields per sheet. \`text\` maps one cell, \`form\` groups fields, \`table\` maps columns over a row range |
 
 \`appMapping\` powers three things: the Editable Cells plugin (only mapped cells can be edited when it's on), \`EditableCellsModal\`, and the AI agent, which can write to \`BillTo.Name\` instead of guessing \`C5\`.
+
+**Checkbox cells:** a cell listed in \`msc.EditableCells.constraints\` with \`["tc"]\` (e.g. \`"sheet1!H10": ["tc"]\`) toggles a checkmark on tap, once per tap, as an undoable sheet command. The checkmark is \`<img src="checkmark.png">\`; change it with \`SocialCalc.ToggleCellSettings.checkedHTML\`.
     `,
     codeSnippet: {
       language: "javascript",

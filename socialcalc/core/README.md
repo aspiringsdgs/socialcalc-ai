@@ -746,7 +746,7 @@ Two helpers switch styling:
 | `NormalizeSheetName(name)` | `sheet.js` (null → lowercase) | Share cache entries between spellings of a sheet name |
 | `IsCellEditable(editor)` | `workbook.js` | Blocks editing and cutting of locked template cells |
 | `IsCoordEditable("sheet!coord")` | `workbook.js` | Same check by coordinate |
-| `ToggleCell(coord)` | `workbook.js` | Toggles a checkmark in cells with a `tc` constraint |
+| `ToggleCell(coord)` | `workbook.js` | Toggles a checkmark in cells with a `tc` constraint, through a sheet command; markup and tap de-duplication in `SocialCalc.ToggleCellSettings` |
 | `broadcast(type, data)` | `environment.js` (no-op) | Receives every scheduled command, for collaboration or sync |
 
 ### Editable-cell templates
@@ -919,7 +919,6 @@ These exist in the engine today. They were found while documenting it and are **
   - Declaring `slast` in that block would fix it.
 - **`EditorChangecontact`** (`table-editor.js`) uses the undeclared variables `cmdline`, `contactname`, etc., and throws the same way.
 - **`InputLineClearText`** (`environment.js`) references a global `spreadsheet` variable that is not defined anywhere in the core.
-- **`ToggleCell`** (`workbook.js`) inserts a hard-coded external checkmark image (`imageshack.com`).
 - **Formatting quirks observed:**
   - `0.5` formatted with `h:mm AM/PM` gives `0:00 PM`.
   - Scientific formats (`0.00E+00`) mis-format small numbers.

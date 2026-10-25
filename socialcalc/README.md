@@ -622,6 +622,12 @@ const canEdit = AppGeneral.isCellEditable(editor, "B3"); // true
 const isLocked = AppGeneral.isCellEditable(editor, "A1"); // false
 ```
 
+**Checkbox cells.** A cell with a `"tc"` constraint in the workbook's `EditableCells.constraints` (for example `"sheet1!H10": ["tc"]` for "Paid by: Cash") toggles a checkmark when tapped. The change is a normal sheet command, so it re-renders, can be undone and reaches your change listeners. One tap toggles once, even on touch screens where the browser and the engine both send a mouse-down. The checkmark is `<img src="checkmark.png">`, the same markup the bundled templates use, so ship a `checkmark.png` next to your `index.html` or point it at your own image:
+
+```ts
+SocialCalc.ToggleCellSettings.checkedHTML = '<div><img src="/assets/tick.svg" width="15" height="15"></div>';
+```
+
 ### 6. Plugin Manager (`modules/plugin-manager.js`)
 Allows registration of custom lifecycle plugins:
 ```ts
@@ -768,7 +774,7 @@ SocialCalc provides built-in formatters for commercial, financial, and date/time
 - **Date & Time Formats**: ISO timestamps, short date (`MM/DD/YYYY`), medium date (`DD-MMM-YYYY`), and 12/24-hour clocks.
 
 ### 12. Offline PDF Export Plugin (`socialcalc-ai/pdf-export`)
-Generates PDFs of one sheet or the whole workbook on the device, with no server involved, so it works offline and inside Capacitor apps. Pages are split on row boundaries, chart canvases in the live editor are included, and every page gets a timestamp header, a footer label and `Page X of Y`.
+Generates PDFs of one sheet or the whole workbook on the device, with no server involved, so it works offline and inside Capacitor apps. Pages are split on row boundaries (empty rows at the end of a sheet never get a page of their own), chart canvases in the live editor are included, and every page gets a timestamp header, a footer label and `Page X of Y`.
 
 The plugin is opt-in: it is not part of the main `socialcalc-ai` entry, so apps that do not import it do not need its dependencies. To use it, install the optional peer dependencies:
 
@@ -943,6 +949,10 @@ import {
 ---
 
 ## 📦 Release Notes
+
+### v1.1.2
+- **Checkbox cells** (`"tc"` constraints, e.g. "Paid by: Check / Cash / Money Order") showed a broken image when ticked, because `ToggleCell` used a dead imageshack.com URL. It now uses `checkmark.png` (configurable with `SocialCalc.ToggleCellSettings.checkedHTML`), changes the cell with a sheet command (re-render, undo, change events) and toggles once per tap on touch screens instead of ticking and unticking.
+- **PDF export**: empty rows at the end of a sheet no longer produce a blank page in "Export All as PDF".
 
 ### v1.1.0
 - **Works in any React app**: the package now ships compiled JavaScript (`dist/`), so webpack, Create React App and Next.js no longer fail on `.tsx` files. New `socialcalc-ai/react` entry without Ionic; Ionic-based components are also available from `socialcalc-ai/ionic`. The root entry is unchanged.

@@ -2702,8 +2702,20 @@
     return true;
   };
 
-  // this is for checkmark toggling
+  // Checkbox cells: cells with a "tc" constraint (e.g. "Paid by: Cash") toggle a checkmark on tap.
+  // checkedHTML is the markup the bundled templates use; hosts can point it at their own image.
+  SocialCalc.ToggleCellSettings = SocialCalc.ToggleCellSettings || {
+    checkedHTML: '<div><img src="checkmark.png"></div>',
+    uncheckedHTML: "<div>&nbsp;</div>",
+    // A tap reaches ToggleCell twice on touch screens: from the browser's mouse-down and from the
+    // synthetic one core/touch.js dispatches (~400ms later). Repeats on the same cell inside these
+    // windows are ignored, so one tap toggles once.
+    syntheticRepeatMs: 1000,
+    repeatMs: 300,
+  };
+
   SocialCalc.Callbacks.ToggleCell = function (cellname) {
+    var settings = SocialCalc.ToggleCellSettings;
     var control = SocialCalc.GetCurrentWorkBookControl();
     if (!control || !control.currentSheetButton || !control.workbook || !control.workbook.sheetArr) {
       return;
@@ -2712,43 +2724,38 @@
     if (!control.workbook.sheetArr[sheetid]) return;
     var sheetobj = control.workbook.sheetArr[sheetid].sheet;
     if (!sheetobj || !sheetobj.cells) return;
-    var cell = sheetobj.cells[cellname];
-    var sheetname = sheetobj.sheetname;
+    var editor = control.workbook.spreadsheet && control.workbook.spreadsheet.editor;
+    if (!editor) return;
 
-    // check if cell is in constraints
-    //console.log(sheetname);
-    //console.log(cellname);
-
-    var constraint =
-      SocialCalc.EditableCells.constraints[sheetname + "!" + cellname];
+    var constraints = SocialCalc.EditableCells && SocialCalc.EditableCells.constraints;
+    var constraint = constraints && constraints[sheetobj.sheetname + "!" + cellname];
     if (!constraint || constraint[0] != "tc") {
       return;
     }
 
-    var cellinner = document.getElementById("cell_" + cellname);
-
-    if (cellinner.innerHTML.indexOf("&nbsp;") != -1) {
-      // set the value to the img value
-      cellinner.innerHTML =
-        '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-      if (cell) {
-        //cell.displaystring = '<div><img src="http://img689.imageshack.us/img689/9234/checkmark.png"></img></div>'    ;
-        //cell.datavalue = '<div><img src="http://img689.imageshack.us/img689/9234/checkmark.png"></img></div>'   ;
-        //console.log("found cell")
-        cell.displaystring =
-          '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-        cell.datavalue =
-          '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-        //http://img689.imageshack.us/img689/9234/checkmark.png
-      }
-    } else {
-      // set the value to a space
-      cellinner.innerHTML = "<div>&nbsp;</div>";
-      if (cell) {
-        cell.datavalue = "<div>&nbsp;</div>";
-        cell.displaystring = "<div>&nbsp;</div>";
-      }
+    var key = sheetid + "!" + cellname;
+    var now = Date.now();
+    var event = typeof window !== "undefined" ? window.event : null;
+    var synthetic = !!event && event.isTrusted === false;
+    var last = SocialCalc.ToggleCellLast;
+    if (last && last.key == key && now - last.at < (synthetic ? settings.syntheticRepeatMs : settings.repeatMs)) {
+      return;
     }
+    SocialCalc.ToggleCellLast = { key: key, at: now };
+
+    var cell = sheetobj.cells[cellname];
+    var current = cell ? String(cell.datavalue || "") : "";
+    var isTicked = /<img/i.test(current);
+    var next = isTicked ? settings.uncheckedHTML : settings.checkedHTML;
+
+    // A sheet command (not a direct cell write) re-renders the cell, records undo and lets
+    // hosts see the change, like any other edit.
+    editor.EditorScheduleSheetCommands(
+      "set " + cellname + " text th " + SocialCalc.encodeForSave(next) + "\n" +
+        "set " + cellname + " textvalueformat text-html",
+      true,
+      false
+    );
   };
 
   SocialCalc.WorkbookControlCreateSheetHTML = function (sheetlist) {
