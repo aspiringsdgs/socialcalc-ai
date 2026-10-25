@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
 import {
+  Activity,
   ArrowRight,
   Blocks,
   Bot,
   ExternalLink,
   FileSpreadsheet,
+  HeartPulse,
+  Lock,
   Package,
   Rocket,
   Server,
+  Smartphone,
   Sparkles,
 } from "lucide-react";
 import { HeroVideo } from "../components/HeroVideo";
@@ -15,6 +19,53 @@ import { GithubIcon } from "../components/GithubIcon";
 import { CodeBlock } from "../components/CodeBlock";
 import { Link } from "../router";
 import { ASPIRING_APPS, PACKAGES } from "../siteConfig";
+
+const HEALTHCARE_APPS = [
+  {
+    id: "medical-invoice",
+    name: "Medical Invoice",
+    role: "Clinical Billing & Claims",
+    color: "#E11D48",
+    icon: "/healthcare/medical-invoice-icon.png",
+    screenshot: "/healthcare/medical-invoice-editor.png",
+    description:
+      "Generate itemized medical bills with treatments, procedures, diagnostics, and doctor consultation fees entirely offline.",
+    features: ["Itemized OPD Bills", "Doctor & Clinic Branding", "Automatic Tax & Totals", "100% Offline Private"],
+  },
+  {
+    id: "medical-ledger",
+    name: "Medical Ledger",
+    role: "Hospital & Practice Accounts",
+    color: "#0D9373",
+    icon: "/healthcare/medical-ledger-icon.png",
+    screenshot: "/healthcare/medical-ledger-editor.png",
+    description:
+      "Continuous financial ledger for hospitals and medical practices. Tracks patient receipts, insurance payouts, and running balance.",
+    features: ["Running Balance Math", "12 Monthly Workbooks", "Claims & Revenue Tracking", "Month Carryforward"],
+  },
+  {
+    id: "medical-checkbook",
+    name: "Medical Checkbook Register",
+    role: "Expense & Settlement Register",
+    color: "#0284C7",
+    icon: "/healthcare/medical-checkbook-icon.png",
+    screenshot: "/healthcare/medical-checkbook-editor.png",
+    description:
+      "Keep every medical disbursement, insurance reimbursement, doctor fee deposit, and pharmacy expense in one private register.",
+    features: ["Running & Cleared Balances", "Spending by Category & Charts", "Insurance Reimbursements", "Bank Reconciliation"],
+  },
+  {
+    id: "hospital-schedule",
+    name: "Hospital Staff Schedule",
+    role: "Shift & Duty Roster",
+    color: "#7C3AED",
+    icon: "/healthcare/hospital-schedule-icon.png",
+    screenshot: "/healthcare/hospital-schedule-editor.png",
+    description:
+      "Plan physician, nurse, technician, and ward staff shifts. Build weekly duty rosters with automated in/out hours and pay calculations.",
+    features: ["Doctor & Nurse Shifts", "Duty In/Out Hours Tracking", "Automated Pay & Overtime", "Department Rosters"],
+  },
+];
 
 const STATS = [
   { value: "109", label: "built-in formula functions" },
@@ -210,6 +261,88 @@ SC.enableTouchScroll();`}
         </div>
       </section>
 
+      {/* Explore Healthcare usecases built on SocialCalc */}
+      <section className="dash-section dash-healthcare-section" id="healthcare-usecases">
+        <div className="dash-healthcare-head">
+          <div className="dash-healthcare-pill">
+            <HeartPulse size={14} /> Production Healthcare Showcase
+          </div>
+          <h2 className="dash-healthcare-title">
+            Explore Healthcare usecases built on SocialCalc
+          </h2>
+          <p className="dash-healthcare-subtitle">
+            Turn-key, 100% offline, privacy-first clinical &amp; practice management applications built on top of the SocialCalc spreadsheet engine.
+          </p>
+        </div>
+
+        <div className="dash-healthcare-grid">
+          {HEALTHCARE_APPS.map((app) => (
+            <article key={app.id} className="dash-hc-card" style={{ "--app-accent": app.color } as React.CSSProperties}>
+              <div className="dash-hc-card-header">
+                <div className="dash-hc-icon-row">
+                  <img src={app.icon} alt={`${app.name} icon`} className="dash-hc-app-icon" />
+                </div>
+                <div className="dash-hc-card-titles">
+                  <h3>{app.name}</h3>
+                  <div className="dash-hc-category">{app.role}</div>
+                </div>
+                <p className="dash-hc-description">{app.description}</p>
+                <div className="dash-hc-features">
+                  {app.features.map((f) => (
+                    <span key={f} className="dash-hc-feature-pill">
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="dash-hc-device-frame">
+                <div className="dash-hc-device-speaker" />
+                <div className="dash-hc-device-screen">
+                  <img
+                    src={app.screenshot}
+                    alt={`${app.name} spreadsheet screenshot`}
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="dash-hc-bottom-banner">
+          <div className="dash-hc-benefit">
+            <div className="dash-hc-benefit-icon">
+              <Lock size={18} />
+            </div>
+            <div className="dash-hc-benefit-text">
+              <h4>100% Offline &amp; Privacy-First</h4>
+              <p>Clinical billing and hospital records stay on device with zero cloud tracking and offline PDF generation.</p>
+            </div>
+          </div>
+
+          <div className="dash-hc-benefit">
+            <div className="dash-hc-benefit-icon">
+              <Activity size={18} />
+            </div>
+            <div className="dash-hc-benefit-text">
+              <h4>Instant SocialCalc Formulas</h4>
+              <p>Zero-latency calculation of running ledger balances, procedure subtotals, and staff duty hours.</p>
+            </div>
+          </div>
+
+          <div className="dash-hc-benefit">
+            <div className="dash-hc-benefit-icon">
+              <Smartphone size={18} />
+            </div>
+            <div className="dash-hc-benefit-text">
+              <h4>Touch &amp; Mobile-Optimized</h4>
+              <p>React + Ionic touch grid controls with full native support for iOS, Android, and Web browsers.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Built on SocialCalc */}
       <section className="dash-section">
         <div className="dash-banners">
@@ -234,7 +367,7 @@ SC.enableTouchScroll();`}
 
       <footer className="dash-footer">
         <div>
-          <Rocket size={14} /> SocialCalc AI. Original SocialCalc engine modernized by Anirudh Sharma. MIT License.
+          <Rocket size={14} /> SocialCalc AI
         </div>
         <div className="dash-footer-links">
           <Link to="/socialcalc">SocialCalc docs</Link>
