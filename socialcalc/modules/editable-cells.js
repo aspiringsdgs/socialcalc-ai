@@ -189,11 +189,16 @@ let _currentAppMapping = {};
 /**
  * Set active app mapping and populate SocialCalc.EditableCells
  * @param {object} appMapping
+ * @param {{ keepEditableCells?: boolean }} [options] With keepEditableCells the mapping is recorded but
+ *   an existing SocialCalc.EditableCells is left alone. Use it after loading a workbook that carries no
+ *   appMapping (raw MSC from Open / Upload JSON): the load has just restored the saved EditableCells,
+ *   and regenerating them from an empty mapping would wipe them.
  */
-export function setAppMapping(appMapping) {
+export function setAppMapping(appMapping, options = {}) {
   _currentAppMapping = appMapping || {};
   const sc = getSocialCalc();
   if (sc) {
+    if (options.keepEditableCells && sc.EditableCells) return;
     sc.EditableCells = generateEditableCells(_currentAppMapping);
   }
 }

@@ -747,7 +747,10 @@ await SC.exportMSC({ extension: "json", includeAppMapping: true });  // template
 // Import a file the user picked
 const { msc, appMapping } = SC.parseMSCFile(await file.text());
 SC.loadWorkbookData(msc);
-if (appMapping) SC.setAppMapping(appMapping);`,
+if (appMapping) SC.setAppMapping(appMapping);
+// A raw MSC has no appMapping but carries its own EditableCells. Don't call setAppMapping({}) after the
+// load (it regenerates them from nothing); if you must record an empty mapping, keep the loaded cells:
+else SC.setAppMapping({}, { keepEditableCells: true });`,
     },
   },
   {

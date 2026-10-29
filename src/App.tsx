@@ -220,8 +220,10 @@ const App: React.FC = () => {
         setAppMapping(templateData.appMapping);
         AppGeneral.setAppMapping(templateData.appMapping);
       } else {
+        // Raw MSC (Open / Upload JSON) has no appMapping, but the load just restored the workbook's own
+        // EditableCells; don't regenerate them from an empty mapping.
         setAppMapping({});
-        AppGeneral.setAppMapping({});
+        AppGeneral.setAppMapping({}, { keepEditableCells: true });
       }
 
       // Re-apply plugin styles after sheet switch

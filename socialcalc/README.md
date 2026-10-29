@@ -622,6 +622,8 @@ const canEdit = AppGeneral.isCellEditable(editor, "B3"); // true
 const isLocked = AppGeneral.isCellEditable(editor, "A1"); // false
 ```
 
+**Opening a workbook without an `appMapping`.** `setAppMapping(mapping)` regenerates `SocialCalc.EditableCells` from the mapping. A raw MSC (what Open / Upload JSON read) carries its own saved `EditableCells` and no mapping, and `loadWorkbookData` restores them, so don't follow the load with `setAppMapping({})`: that would wipe them. Pass `{ keepEditableCells: true }` (`AppGeneral.setAppMapping({}, { keepEditableCells: true })`) to record the mapping while keeping the `EditableCells` the load restored; if none exist yet they are generated as usual.
+
 **Checkbox cells.** A cell with a `"tc"` constraint in the workbook's `EditableCells.constraints` (for example `"sheet1!H10": ["tc"]` for "Paid by: Cash") toggles a checkmark when tapped. The change is a normal sheet command, so it re-renders, can be undone and reaches your change listeners. One tap toggles once, even on touch screens where the browser and the engine both send a mouse-down. The checkmark is `<img src="checkmark.png">`, the same markup the bundled templates use, so ship a `checkmark.png` next to your `index.html` or point it at your own image:
 
 ```ts
