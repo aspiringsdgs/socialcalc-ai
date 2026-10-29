@@ -60,7 +60,8 @@ import { Share } from "@capacitor/share";
 import { EmailComposer } from "capacitor-email-composer";
 import { Printer } from "@bcyesil/capacitor-plugin-printer";
 import ExportSharePanel from "./ExportSharePanel";
-import { LoginModal, OpenModal } from "./StorageControls";
+import { LoginModal, OpenModal, HeliaSaveModal, HeliaOpenModal } from "./StorageControls";
+import { heliaAdapter, describeHeliaError } from "./storage/heliaAdapter";
 import { STORAGE_BACKEND } from "./storage/config";
 import { tornadoAdapter, describeStorageError, StorageError, type SheetInfo } from "./storage/tornadoAdapter";
 
@@ -200,6 +201,26 @@ const App: React.FC = () => {
   const [overwriteName, setOverwriteName] = useState<string | null>(null);
   const [deleteName, setDeleteName] = useState<string | null>(null);
 
+  // Where Save/Open go: the Tornado account store, or Helia (encrypted, addressed by CID).
+  type Backend = "tornado" | "helia";
+  const [backend, setBackend] = useState<Backend>(() => {
+    try {
+      return localStorage.getItem("socialcalc_storage_backend") === "helia" ? "helia" : "tornado";
+    } catch {
+      return "tornado";
+    }
+  });
+  const chooseBackend = (b: Backend) => {
+    setBackend(b);
+    try {
+      localStorage.setItem("socialcalc_storage_backend", b);
+    } catch {
+      /* private mode: the choice just isn't remembered */
+    }
+  };
+  const [heliaSaveOpen, setHeliaSaveOpen] = useState(false);
+  const [heliaOpenOpen, setHeliaOpenOpen] = useState(false);
+
   /** Toast a storage failure; a 401 also logs out locally and opens the login modal. */
   const handleStorageError = (err: unknown, action: string) => {
     notify(describeStorageError(err, action), 4000);
@@ -266,7 +287,49 @@ const App: React.FC = () => {
     [saveAsOpen],
   );
 
-  const handleSave = () => (currentSheetName ? doSave(currentSheetName) : setSaveAsOpen(true));
+  const handleSave = () => {
+    if (backend === "helia") return setHeliaSaveOpen(true);
+    return currentSheetName ? doSave(currentSheetName) : setSaveAsOpen(true);
+  };
+
+  // The passphrase is only used for this call and never stored.
+  const handleHeliaSave = async (passphrase: string) => {
+    try {
+      return await heliaAdapter.save(AppGeneral.getSpreadsheetContent(), passphrase);
+    } catch (err) {
+      throw new Error(describeHeliaError(err, "Save"));
+    }
+  };
+
+  const handleHeliaOpen = async (cid: string, passphrase: string) => {
+    let data: string;
+    try {
+      data = await heliaAdapter.open(cid, passphrase);
+    } catch (err) {
+      throw new Error(describeHeliaError(err, "Open"));
+    }
+    let parsed;
+    try {
+      parsed = AppGeneral.parseMSCFile(data);
+    } catch {
+      throw new Error("That CID is not a SocialCalc workbook");
+    }
+    setHeliaOpenOpen(false);
+    setSelectedTemplateKey("custom");
+    const name = `ipfs-${cid.slice(0, 10)}`;
+    applyTemplate(parsed, name);
+    setCurrentSheetName(null);
+    notify(`Opened ${cid.slice(0, 16)}…`);
+  };
+
+  const copyCid = async (cid: string) => {
+    try {
+      await navigator.clipboard.writeText(cid);
+      notify("CID copied");
+    } catch {
+      notify("Could not copy; select the CID and copy it manually", 3000);
+    }
+  };
 
   const handleSaveAsName = async (name: string) => {
     name = name.trim();
@@ -283,6 +346,7 @@ const App: React.FC = () => {
   };
 
   const handleOpenClick = async () => {
+    if (backend === "helia") return setHeliaOpenOpen(true);
     setShowOpenModal(true);
     setOpenList(null);
     try {
@@ -731,20 +795,31 @@ const App: React.FC = () => {
         {storageEnabled && (
           <IonToolbar color="light">
             <div className="storage-toolbar" data-testid="storage-toolbar">
+              <select data-testid="storage-backend" className="storage-backend" value={backend}
+                onChange={(e) => chooseBackend(e.target.value as Backend)} aria-label="Storage backend">
+                <option value="tornado">Tornado (server)</option>
+                <option value="helia">Helia (CID)</option>
+              </select>
               <span className="storage-sheet-name" data-testid="current-sheet-name">
                 {currentSheetName ?? "Unsaved sheet"}
               </span>
               <button className="pill-btn primary" data-testid="btn-open" onClick={handleOpenClick}>Open</button>
               <button className="pill-btn primary" data-testid="btn-save" onClick={handleSave}>Save</button>
-              <button className="pill-btn primary" data-testid="btn-save-as" onClick={() => setSaveAsOpen(true)}>Save As</button>
-              {loggedIn ? (
+              {backend === "tornado" && (
+                <button className="pill-btn primary" data-testid="btn-save-as" onClick={() => setSaveAsOpen(true)}>Save As</button>
+              )}
+              {backend === "helia" ? (
+                <span className="storage-user" data-testid="storage-user">Encrypted before upload; no login</span>
+              ) : loggedIn ? (
                 <button className="pill-btn secondary" data-testid="btn-logout" onClick={handleLogout}>Logout</button>
               ) : (
                 <button className="pill-btn secondary" data-testid="btn-login" onClick={() => setShowLoginModal(true)}>Login</button>
               )}
-              <span className="storage-user" data-testid="storage-user">
-                {loggedIn ? (userEmail ? `Logged in: ${userEmail}` : "Logged in") : "Not logged in"}
-              </span>
+              {backend === "tornado" && (
+                <span className="storage-user" data-testid="storage-user">
+                  {loggedIn ? (userEmail ? `Logged in: ${userEmail}` : "Logged in") : "Not logged in"}
+                </span>
+              )}
             </div>
           </IonToolbar>
         )}
@@ -927,6 +1002,9 @@ const App: React.FC = () => {
 
         {storageEnabled && (
           <>
+            <HeliaSaveModal isOpen={heliaSaveOpen} onClose={() => setHeliaSaveOpen(false)} onSave={handleHeliaSave} onCopy={copyCid} />
+            <HeliaOpenModal isOpen={heliaOpenOpen} onClose={() => setHeliaOpenOpen(false)} onOpen={handleHeliaOpen}
+              onList={() => heliaAdapter.list()} />
             <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onSubmit={handleLogin} />
             <OpenModal
               isOpen={showOpenModal}

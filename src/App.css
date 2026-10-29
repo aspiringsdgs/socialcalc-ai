@@ -476,3 +476,7 @@ ion-modal ion-content {
 .storage-list td { padding: 6px 8px; border-bottom: 1px solid rgba(128, 128, 128, 0.3); }
 .storage-link { background: none; border: none; color: var(--ion-color-primary, #3880ff); cursor: pointer; font-size: 15px; padding: 0; }
 .storage-meta { font-size: 12px; opacity: 0.7; white-space: nowrap; }
+.storage-backend { padding: 6px 8px; border: 1px solid #aaa; border-radius: 6px; font-size: 13px; background: transparent; color: inherit; }
+.storage-form .storage-meta { white-space: normal; }
+.storage-cid { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; text-align: left; }
+.storage-error { color: var(--ion-color-danger, #eb445a); font-size: 13px; margin: 0; }

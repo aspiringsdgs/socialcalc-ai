@@ -66,7 +66,38 @@ so browser and API share one origin and no CORS is needed.
   and `COOKIE_SECURE=true` on Tornado.
 - **Container:** the `feature/docker` image proxies `/api` to Tornado itself (see `docker/README.md`).
 
+### Helia (IPFS) storage
+
+The storage bar has a backend selector: **Tornado (server)** keeps the account-based save above;
+**Helia (CID)** saves a sheet to IPFS through Tornado's `/meshkit-helia/{upload,retrieve/<cid>,list}`
+routes and shows the CID so it can be shared. The app never runs Helia itself, it only talks HTTP to
+Tornado. This lives entirely in the demo app (`src/storage/heliaAdapter.ts`, `src/storage/crypto.ts`,
+`HeliaSaveModal` / `HeliaOpenModal` in `src/StorageControls.tsx`); nothing in `socialcalc/` changed.
+
+- **Encryption:** the sheet (the raw `WorkBookControlSaveSheet()` string, UTF-8) is encrypted in the
+  browser before upload with the passphrase you type: AES-256-GCM, key from PBKDF2-SHA256 (200,000
+  iterations), in the EMSH wire format of `@ipfs-meshkit/meshkit`, so Helia and Tornado only see
+  ciphertext. The passphrase is never stored and cannot be recovered; whoever opens the CID needs it.
+  `src/storage/crypto.ts` is a WebCrypto port of ZKMedical-Billing's `src/services/storage/crypto.ts`
+  (meshkit does not export `encrypt`/`decrypt`); a vendored copy of meshkit's own `crypto.ts`
+  (`src/storage/fixtures/`) is used by a two-way cross-compat test.
+- **Open:** paste a CID and the passphrase (the node's CIDs are listed to click on). A wrong passphrase
+  or a corrupted object shows "wrong passphrase or corrupted data"; an unreachable Helia shows
+  "Helia is unreachable".
+- **Config:** `VITE_HELIA_BASE_URL` (default `http://localhost:8080`) is the Tornado origin serving
+  `/meshkit-helia/*`. It is cross-origin, so Tornado must allow this app's origin in its CORS list
+  (for `npm run dev`, `http://localhost:5173`). Set it to an empty string to use relative URLs, which
+  the Vite dev proxy forwards to `TORNADO_HELIA_PROXY_TARGET` (default `http://127.0.0.1:8080`).
+- **Note:** the `/meshkit-helia` routes have no user auth; that is acceptable here only because the
+  payload is encrypted. Opening a sheet restores its content and formatting but, like Open/Upload JSON
+  for Tornado, not the template's `EditableCells` metadata.
+
 ### Tests
 
 `npm run test:run` runs the adapter unit tests. `scripts/e2e-tornado-storage.mjs` is a real-UI
 Playwright script (Playwright is not a dependency of this repo; prerequisites are in the file header).
+
+`src/storage/heliaAdapter.test.ts` and `src/storage/crypto.test.ts` cover Helia save/open, the
+encryption round-trip, the meshkit cross-compat, and the unreachable-Helia errors with a mocked
+`fetch`. `scripts/e2e-helia-storage.mjs` is a headless-Chromium check against a live stack (save, reload,
+open by CID, verify the stored object is ciphertext and the restored content is identical).
