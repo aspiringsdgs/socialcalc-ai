@@ -13,7 +13,8 @@
     "test:smoke": "vitest --run socialcalc/tests/smoke",
     "test:modules": "vitest --run socialcalc/tests/modules",
     "test:components": "vitest --run socialcalc/tests/components",
-    "test:regression": "vitest --run socialcalc/tests/regression"
+    "test:regression": "vitest --run socialcalc/tests/regression",
+    "test:types": "tsc -p socialcalc/tests/typings/tsconfig.json"
   },
   "dependencies": {
     "@bcyesil/capacitor-plugin-printer": "^0.0.5",
