@@ -4,7 +4,7 @@
 export const PACKAGES = {
   socialcalc: {
     name: "socialcalc-ai",
-    version: "1.0.9",
+    version: "1.1.0",
     npm: "https://www.npmjs.com/package/socialcalc-ai",
     github: "https://github.com/aspiringsdgs/socialcalc-ai",
     install: "npm install socialcalc-ai",
@@ -27,7 +27,7 @@ export const ASPIRING_APPS = {
  * Intro video shown at the top of the dashboard.
  *
  * - A YouTube link ("https://www.youtube.com/watch?v=..." or "https://youtu.be/...") is embedded.
- * - Any other URL, or a file placed in docs/public/videos/ (e.g. "/videos/socialcalc-intro.mp4"),
+ * - Any other URL, or a file placed in docs-site/public/videos/ (e.g. "/videos/socialcalc-intro.mp4"),
  *   plays in a <video> element.
  * - Leave `src` empty to show a placeholder.
  *

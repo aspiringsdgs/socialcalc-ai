@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   getHorizontalScrollInfo,
   scrollToColumn,
@@ -23,50 +23,42 @@ export const HorizontalScrollBar: React.FC<HorizontalScrollBarProps> = ({
 }) => {
   const [scrollInfo, setScrollInfo] = useState(() => getHorizontalScrollInfo());
 
-  // Subscribe to external scroll events (e.g. from gestures or programmatic scrolls)
-  useEffect(() => {
-    // Initial sync
-    setScrollInfo(getHorizontalScrollInfo());
+  // Latest callback without re-subscribing when the parent passes a new inline function
+  const onColumnChangeRef = useRef(onColumnChange);
+  onColumnChangeRef.current = onColumnChange;
 
-    const unsubscribe = subscribeHorizontalScroll((info) => {
+  // Subscribe to scroll changes (buttons, gestures, keyboard, programmatic scrolls)
+  useEffect(() => {
+    let lastKey = "";
+    const sync = (info: ReturnType<typeof getHorizontalScrollInfo>) => {
+      const key = `${info.currentFirstCol}:${info.totalCols}`;
+      if (key === lastKey) return;
+      lastKey = key;
       setScrollInfo(info);
-      if (onColumnChange) {
-        onColumnChange({
+      if (onColumnChangeRef.current) {
+        onColumnChangeRef.current({
           firstCol: info.currentFirstCol,
           colName: info.currentColName,
           totalCols: info.totalCols
         });
       }
-    });
-
-    // Also listen to custom window events for extra compatibility
-    const handleCustomScroll = (e: any) => {
-      if (e.detail) {
-        setScrollInfo(e.detail);
-      }
     };
-    window.addEventListener("socialcalc:horizontal-scroll", handleCustomScroll);
 
-    // Periodic check to keep in sync if canvas/DOM scrolls without direct event
-    const timer = setInterval(() => {
-      const current = getHorizontalScrollInfo();
-      setScrollInfo((prev) => {
-        if (
-          prev.currentFirstCol !== current.currentFirstCol ||
-          prev.totalCols !== current.totalCols
-        ) {
-          return current;
-        }
-        return prev;
-      });
-    }, 400);
+    // Initial sync (state only; onColumnChange reports changes, not the starting position)
+    const initial = getHorizontalScrollInfo();
+    lastKey = `${initial.currentFirstCol}:${initial.totalCols}`;
+    setScrollInfo(initial);
+
+    const unsubscribe = subscribeHorizontalScroll(sync);
+
+    // Fallback in case the grid scrolls without any event reaching us
+    const timer = setInterval(() => sync(getHorizontalScrollInfo()), 400);
 
     return () => {
       unsubscribe();
-      window.removeEventListener("socialcalc:horizontal-scroll", handleCustomScroll);
       clearInterval(timer);
     };
-  }, [onColumnChange]);
+  }, []);
 
   const handlePrev = useCallback(() => {
     scrollHorizontalBy(-step);

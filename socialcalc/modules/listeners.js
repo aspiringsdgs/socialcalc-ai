@@ -1,14 +1,21 @@
 // Cell change listeners and event handling
-import { SocialCalcRef, buildSetValueCommands } from "./runtime.js";
+import { SocialCalcRef, buildSetValueCommands, getCellEditText, isDataCellElement } from "./runtime.js";
 import { on as onBusEvent } from "./events.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
 
-import { enhancedShowPrompt } from "./prompts.js";
-import { registerPlugin } from "./plugin-manager.js";
-import { selectRow, selectColumn, setColumnWidth, hideColumnResizeHandle, isRowColHeadersEnabled } from "./row-col-headers.js";
+import { registerPlugin, notifyPluginStateChange } from "./plugin-manager.js";
+import {
+  selectRow,
+  selectColumn,
+  setColumnWidth,
+  showColumnResizeHandle,
+  hideColumnResizeHandle,
+  isRowColHeadersEnabled,
+} from "./row-col-headers.js";
 import { isEditableCellsOnlyEnabled, isCellEditable } from "./editable-cells.js";
+import { updateCellValueAndFormat } from "./formatting.js";
 
 let _cellEditModalEnabled = true;
 if (typeof window !== "undefined") {
@@ -25,6 +32,7 @@ export function enableCellEditModal() {
     window.SocialCalc.isCellEditModalEnabled = () => true;
   }
   setupMouseListener();
+  notifyPluginStateChange("cellEditModal");
 }
 
 /**
@@ -35,6 +43,7 @@ export function disableCellEditModal() {
   if (typeof window !== "undefined" && window.SocialCalc) {
     window.SocialCalc.isCellEditModalEnabled = () => false;
   }
+  notifyPluginStateChange("cellEditModal");
 }
 
 /**
@@ -55,6 +64,7 @@ export function toggleCellEditModal(show) {
   if (_cellEditModalEnabled) {
     setupMouseListener();
   }
+  notifyPluginStateChange("cellEditModal");
   return _cellEditModalEnabled;
 }
 
@@ -241,7 +251,7 @@ export function setupMouseListener() {
     if (!isColHeader && headerTd) {
       if (headerTd.className && typeof headerTd.className === "string" && headerTd.className.indexOf("colname") !== -1) {
         isColHeader = true;
-      } else if (headerTd.tagName === "TD" || headerTd.tagName === "TH") {
+      } else if ((headerTd.tagName === "TD" || headerTd.tagName === "TH") && !isDataCellElement(headerTd)) {
         var headerTxt = (headerTd.textContent || "").trim().toUpperCase();
         if (/^[A-Z]{1,2}$/.test(headerTxt)) {
           isColHeader = true;
@@ -324,8 +334,12 @@ export function setupMouseListener() {
     mouseinfo.mousedowncoord = coord;
     mouseinfo.mouselastcoord = coord;
 
-    // Update Mouse Range
+    // Update Mouse Range (also saves a pending native edit, or inserts a reference while
+    // a formula is being typed)
     editor.EditorMouseRange(coord);
+
+    // Give the grid the keyboard again (arrow keys, typing), as the core handler does
+    if (SocialCalc.KeyboardSetFocus) SocialCalc.KeyboardSetFocus(editor);
 
     // --- CUSTOM LOGIC ---
     if (_cellEditModalEnabled) {
@@ -338,11 +352,12 @@ export function setupMouseListener() {
       } else {
         triggerCustomModal(editor);
       }
-    } else {
+    } else if (editor.state && editor.state !== "start") {
+      // Still editing (e.g. the click inserted a reference into a formula): keep the input
+      if (editor.inputBox && editor.inputBox.element) editor.inputBox.element.focus();
+    } else if (editor.ecell && editor.EditorOpenCellEdit) {
       // Default to native cell input
-      if (editor && editor.ecell && editor.EditorOpenCellEdit) {
-        editor.EditorOpenCellEdit(coord);
-      }
+      editor.EditorOpenCellEdit(coord);
     }
     // --------------------
 
@@ -384,15 +399,7 @@ export function setupMouseListener() {
   const originalKeyPress = SocialCalc.ProcessKeyPress;
 
   SocialCalc.ProcessKeyDown = function (e) {
-    const isModalOpen = !!document.querySelector(".sc-cell-modal-backdrop, .sc-cell-edit-backdrop, .sc-modal-container");
-    const activeElement = document.activeElement;
-    const isTypingInInput =
-      activeElement &&
-      (activeElement.tagName === "INPUT" ||
-        activeElement.tagName === "TEXTAREA" ||
-        activeElement.getAttribute("contenteditable") === "true");
-
-    if (isModalOpen || isTypingInInput) {
+    if (shouldLeaveKeyToPage()) {
       return true; // Let standard browser inputs handle key events
     }
 
@@ -403,15 +410,7 @@ export function setupMouseListener() {
   };
 
   SocialCalc.ProcessKeyPress = function (e) {
-    const isModalOpen = !!document.querySelector(".sc-cell-modal-backdrop, .sc-cell-edit-backdrop, .sc-modal-container");
-    const activeElement = document.activeElement;
-    const isTypingInInput =
-      activeElement &&
-      (activeElement.tagName === "INPUT" ||
-        activeElement.tagName === "TEXTAREA" ||
-        activeElement.getAttribute("contenteditable") === "true");
-
-    if (isModalOpen || isTypingInInput) {
+    if (shouldLeaveKeyToPage()) {
       return true;
     }
 
@@ -421,9 +420,56 @@ export function setupMouseListener() {
     return true;
   };
 
+  // The core installs these with `document.onkeydown = SocialCalc.ProcessKeyDown` the first time
+  // an editor takes focus; point an already-installed listener at the patched versions.
+  if (SocialCalc.Keyboard && SocialCalc.Keyboard.areListener && typeof document !== "undefined") {
+    if (document.onkeydown === originalKeyDown) document.onkeydown = SocialCalc.ProcessKeyDown;
+    if (document.onkeypress === originalKeyPress) document.onkeypress = SocialCalc.ProcessKeyPress;
+  }
+
   return () => {
     // Cleanup if needed
   };
+}
+
+/**
+ * True when a key event belongs to the page rather than the grid: the edit modal is open, or
+ * the user is typing in some other input. The engine's own input box is not "some other input":
+ * while a cell is edited natively it has focus and Enter/Tab/Escape must still reach the engine.
+ */
+function shouldLeaveKeyToPage() {
+  if (typeof document === "undefined") return false;
+  if (document.querySelector(".sc-cell-modal-backdrop, .sc-cell-edit-backdrop, .sc-modal-container")) {
+    return true;
+  }
+  const activeElement = document.activeElement;
+  if (!activeElement) return false;
+  const focusTable = SocialCalc.Keyboard && SocialCalc.Keyboard.focusTable;
+  if (focusTable && focusTable.inputBox && focusTable.inputBox.element === activeElement) {
+    return false;
+  }
+  return (
+    activeElement.tagName === "INPUT" ||
+    activeElement.tagName === "TEXTAREA" ||
+    activeElement.getAttribute("contenteditable") === "true"
+  );
+}
+
+/**
+ * Commits a value typed by the user (and optional formatting) to a cell on the active sheet as
+ * one undo step. Runs the before-commit hooks first (data validation), stores typed text such as
+ * "$1,200", "12%" or dates as numbers like the built-in editor, and queues behind a running recalc.
+ * Pass `undefined` as the value to change only the formatting.
+ * @param {string} coord
+ * @param {any} value
+ * @param {object} [formatting] - Same shape as updateCellValueAndFormat's formatting.
+ * @param {{ detectTypes?: boolean }} [options]
+ * @returns {boolean} false when a hook rejected the value or nothing could be scheduled
+ */
+export function commitCellEdit(coord, value, formatting, options = {}) {
+  const { detectTypes = true } = options;
+  if (value !== undefined && value !== null && !runBeforeCellCommit(coord, value)) return false;
+  return updateCellValueAndFormat(coord, value, formatting, { detectTypes });
 }
 
 /**
@@ -434,7 +480,6 @@ function triggerCustomModal(editor) {
 
   const coord = editor.ecell.coord;
   const sheet = editor.context ? editor.context.sheetobj : null;
-  const cell = sheet && sheet.GetAssuredCell ? sheet.GetAssuredCell(coord) : null;
 
   // Hide the native input box and cancel its timer
   if (editor.inputBox) {
@@ -457,27 +502,20 @@ function triggerCustomModal(editor) {
     }
   }
 
-  // Determine initial text
-  let initialText = "";
-  if (cell) {
-    if (cell.formula) {
-      initialText = "=" + cell.formula;
-    } else if (cell.datavalue !== undefined && cell.datavalue !== null) {
-      initialText = String(cell.datavalue);
-    } else if (cell.displaystring !== undefined && cell.displaystring !== null) {
-      initialText = String(cell.displaystring);
-    }
-  }
-  if (!initialText && SocialCalc && SocialCalc.GetCellContents && sheet) {
-    initialText = SocialCalc.GetCellContents(sheet, coord) || "";
-  }
+  // Initial text: "=formula", the typed text of a constant ("$1,200", not "=$1,200" or 1200),
+  // or the raw value. Reads the cell without creating it (GetAssuredCell would add an empty
+  // cell to the sheet on every click).
+  const initialText = getCellEditText(sheet, coord);
 
   // Callback when user confirms edit in Modal
   const handleOk = (newValue) => {
     if (!runBeforeCellCommit(coord, newValue)) return false;
 
-    // Encoded value commands (text with ":", "\" or newlines stays intact)
-    const cmd = buildSetValueCommands(coord, newValue === undefined ? "" : newValue).join("\n");
+    // Encoded value commands (text with ":", "\" or newlines stays intact); typed numbers,
+    // currency, percentages and dates are stored as numbers like the built-in editor does
+    const cmd = buildSetValueCommands(coord, newValue === undefined ? "" : newValue, {
+      detectTypes: true,
+    }).join("\n");
 
     // Schedule command on active editor; the event bus emits "socialcalc:cell-change" once it has run
     if (editor.EditorScheduleSheetCommands) {

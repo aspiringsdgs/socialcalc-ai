@@ -1,5 +1,5 @@
 // Weight tracking functions
-import { SocialCalcRef } from "./runtime.js";
+import { SocialCalcRef, scheduleSheetCommands, encodeCommandText } from "./runtime.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -110,7 +110,7 @@ export function addWeight(dayNumber, date, weight, goal) {
       var commands = [];
 
       // Set date
-      commands.push(`set ${dayCoords.date} text t ${date}`);
+      commands.push(`set ${dayCoords.date} text t ${encodeCommandText(date)}`);
 
       // Set weight
       commands.push(`set ${dayCoords.weight} value n ${weight}`);
@@ -134,7 +134,7 @@ export function addWeight(dayNumber, date, weight, goal) {
       console.log("Command object:", commandObj);
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         console.log("✓ Weight data added successfully");
         console.log("=== ADD WEIGHT SUCCESS ===");
         resolve(true);
@@ -205,7 +205,7 @@ export function clearWeight(dayNumber) {
       console.log("Command object:", commandObj);
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         console.log("✓ Weight data cleared successfully");
         console.log("=== CLEAR WEIGHT SUCCESS ===");
         resolve(true);

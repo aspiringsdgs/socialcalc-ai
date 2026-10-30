@@ -6,7 +6,7 @@ import {
   toggleEditableCellsOnly,
   isCellEditable,
   generateEditableCells,
-} from './editable-cells.js';
+} from '../../modules/editable-cells.js';
 
 describe('editable-cells plugin', () => {
   beforeEach(() => {

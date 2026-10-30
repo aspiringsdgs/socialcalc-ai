@@ -4,7 +4,7 @@ import {
   toggleCellEditable,
   deleteCellMapping,
   addCellMapping,
-} from "./EditableCellsModal";
+} from "../../components/EditableCellsModal/EditableCellsModal";
 import { generateEditableCells } from "../../modules/editable-cells.js";
 
 describe("EditableCellsModal helper logic", () => {

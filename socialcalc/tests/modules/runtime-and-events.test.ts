@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { bootEngine, wait, waitUntil } from "../../../src/test/engine";
+import { bootEngine, wait, waitUntil } from "../helpers/engine";
 
 let engine: Awaited<ReturnType<typeof bootEngine>>;
 

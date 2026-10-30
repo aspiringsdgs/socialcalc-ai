@@ -1,5 +1,5 @@
 // Logo and signature management functions
-import { SocialCalcRef } from "./runtime.js";
+import { SocialCalcRef, scheduleSheetCommands, encodeCommandText } from "./runtime.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -43,9 +43,8 @@ export function addLogo(coord, url) {
             cmd =
               "set " +
               coord[sheetname] +
-              ' text th <img src="' +
-              url +
-              '" height="100" width="150" alt="Company Logo"></img>' +
+              " text th " +
+              encodeCommandText('<img src="' + url + '" height="100" width="150" alt="Company Logo"></img>') +
               "\n" +
               "set " +
               coord[sheetname] +
@@ -63,7 +62,7 @@ export function addLogo(coord, url) {
             console.log("Command object:", commandObj);
 
             try {
-              control.ExecuteWorkBookControlCommand(commandObj, false);
+              scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
               console.log("✓ Command executed successfully");
               commandExecuted = true;
             } catch (execError) {
@@ -147,7 +146,7 @@ export function removeLogo(coord) {
             console.log("Command object:", commandObj);
 
             try {
-              control.ExecuteWorkBookControlCommand(commandObj, false);
+              scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
               console.log("✓ Command executed successfully");
               commandExecuted = true;
             } catch (execError) {

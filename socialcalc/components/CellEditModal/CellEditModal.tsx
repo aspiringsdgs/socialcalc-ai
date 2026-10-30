@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as AppGeneral from '../../index.js';
+import * as AppGeneral from '../../react.js';
 import { compressImage } from '../../utils/imageCompressor';
+import { normalizeColor } from '../../modules/runtime.js';
 import './CellEditModal.css';
 
 export interface CellData {
   coord: string;
   text: string;
-  okfn: (value: string) => void;
+  /** Commits a value; may return false when the value was rejected */
+  okfn: (value: string) => boolean | void;
   cleanup?: () => void;
 }
 
@@ -112,6 +114,16 @@ export const POPULAR_CELL_FORMATS: CellFormatOption[] = [
   { id: 'time_24h', name: '1:23', formatString: 'h:mm', category: 'time', preview: '1:23' },
 ];
 
+// Stored colors may be names, #hex or rgb(); compare them in one normalized form
+function sameColor(option: { color: string | null; value: string | null }, stored: string): boolean {
+  const target = normalizeColor(stored);
+  if (!target) return false;
+  return (
+    (!!option.value && normalizeColor(option.value) === target) ||
+    (!!option.color && normalizeColor(option.color) === target)
+  );
+}
+
 export const CellEditModal: React.FC<CellEditModalProps> = ({
   isOpen,
   onClose,
@@ -203,21 +215,11 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
           : null;
         if (formatting) {
           if (formatting.color) {
-            const fColorLower = formatting.color.toLowerCase().trim();
-            const found = FONT_COLORS.find(
-              (c) =>
-                (c.value && c.value.toLowerCase() === fColorLower) ||
-                (c.color && c.color.toLowerCase() === fColorLower)
-            );
+            const found = FONT_COLORS.find((c) => sameColor(c, formatting.color));
             matchedFont = found || { name: 'Current', color: formatting.color, value: formatting.color };
           }
           if (formatting.bgcolor) {
-            const bColorLower = formatting.bgcolor.toLowerCase().trim();
-            const found = BG_COLORS.find(
-              (c) =>
-                (c.value && c.value.toLowerCase() === bColorLower) ||
-                (c.color && c.color.toLowerCase() === bColorLower)
-            );
+            const found = BG_COLORS.find((c) => sameColor(c, formatting.bgcolor));
             matchedBg = found || { name: 'Current', color: formatting.bgcolor, value: formatting.bgcolor };
           }
 
@@ -405,17 +407,31 @@ export const CellEditModal: React.FC<CellEditModalProps> = ({
       formatting.valueFormat = selectedValueFormat ? selectedValueFormat.formatString : '';
     }
 
-    try {
-      if (AppGeneral.updateCellValueAndFormat) {
-        AppGeneral.updateCellValueAndFormat(cellData.coord, inputValue, formatting);
-      } else {
-        if (cellData.okfn) {
-          cellData.okfn(inputValue);
+    // Only write the value when it was edited: re-writing an untouched "$1,200" or date would
+    // add an undo step and a change event for nothing
+    const valueChanged = inputValue !== (cellData.text || '');
+    const hasFormatting = Object.keys(formatting).length > 0;
+
+    if (valueChanged || hasFormatting) {
+      let committed = true;
+      try {
+        if (AppGeneral.commitCellEdit) {
+          // Runs before-commit hooks (data validation), detects typed numbers/dates like the
+          // built-in editor, and applies value + formatting as one undo step
+          committed = AppGeneral.commitCellEdit(
+            cellData.coord,
+            valueChanged ? inputValue : undefined,
+            formatting
+          ) !== false;
+        } else if (cellData.okfn && valueChanged) {
+          committed = (cellData.okfn(inputValue) as unknown) !== false;
         }
+      } catch (error) {
+        console.error('Error applying cell changes:', error);
+        committed = false;
       }
-    } catch (error) {
-      console.error('Error applying cell changes:', error);
-      if (cellData.okfn) cellData.okfn(inputValue);
+      // A hook rejected the value: keep the modal open so the user can correct it
+      if (!committed) return;
     }
 
     if (cellData.cleanup) cellData.cleanup();

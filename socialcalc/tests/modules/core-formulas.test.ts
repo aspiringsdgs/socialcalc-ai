@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { bootEngine } from "../../../src/test/engine";
+import { bootEngine } from "../helpers/engine";
 
 // The core ran as a sloppy-mode <script> in the original apps, where assigning to an
 // undeclared name silently created a global. As an ES module it runs in strict mode,

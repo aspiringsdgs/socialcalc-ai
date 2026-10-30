@@ -26,10 +26,12 @@ export default defineConfig({
     },
   },
   resolve: {
-    alias: {
-      "@": "/src",
-      socialcalc: path.resolve(__dirname, "./socialcalc"),
-    },
+    // Source entries, not the folder (its package.json points at the dist/ build)
+    alias: [
+      { find: "@", replacement: "/src" },
+      { find: /^socialcalc(-ai)?$/, replacement: path.resolve(__dirname, "./socialcalc/index.js") },
+      { find: /^socialcalc(-ai)?\/(.*)$/, replacement: path.resolve(__dirname, "./socialcalc") + "/$2" },
+    ],
   },
 });
 

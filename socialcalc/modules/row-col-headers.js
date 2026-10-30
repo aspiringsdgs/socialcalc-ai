@@ -7,9 +7,9 @@
  * touch-friendly corner resize handle on selected column, and row insertion/deletion actions.
  */
 
-import { getActiveEditor, getActiveSpreadsheet, registerPlugin } from "./plugin-manager.js";
+import { getActiveEditor, getActiveSpreadsheet, registerPlugin, notifyPluginStateChange } from "./plugin-manager.js";
 
-import { SocialCalcRef } from "./runtime.js";
+import { SocialCalcRef, isDataCellElement, scheduleSheetCommands } from "./runtime.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -34,37 +34,15 @@ const DISABLED_HEADER_STYLES = {
 };
 
 /**
- * Execute a SocialCalc sheet command synchronously and refresh the editor
+ * Run a SocialCalc sheet command on the active sheet as its own undo step.
+ * Goes through the engine's command queue, so formulas recalculate, the grid re-renders and
+ * "command" / "cell-change" events fire (hosts can autosave). Runs asynchronously.
+ * @param {string | { str: string }} cmd - Command string (a SocialCalc.Parse object is accepted too)
  */
 export function executeSheetCommand(cmd) {
-  if (typeof window !== "undefined" && window.SocialCalc) {
-    SocialCalc = window.SocialCalc;
-  }
-  const editor = getActiveEditor();
-  const spreadsheet = getActiveSpreadsheet();
-
-  if (editor && editor.context && editor.context.sheetobj) {
-    const sheet = editor.context.sheetobj;
-    const parseObj = typeof cmd === "string" && SocialCalc.Parse ? new SocialCalc.Parse(cmd) : cmd;
-
-    // 1. Direct synchronous execution on sheet
-    if (SocialCalc.ExecuteSheetCommand) {
-      SocialCalc.ExecuteSheetCommand(sheet, parseObj, true);
-    }
-
-    // 2. Re-render editor
-    editor.state = "start";
-    if (editor.SchedulePositionCalculations) editor.SchedulePositionCalculations();
-    if (editor.FitToEditTable) editor.FitToEditTable();
-    if (editor.EditorRenderSheet) editor.EditorRenderSheet();
-    if (spreadsheet && spreadsheet.ExecuteCommand) {
-      try {
-        spreadsheet.ExecuteCommand("redisplay", "");
-      } catch (e) {
-        // ignore
-      }
-    }
-  }
+  const cmdstr = typeof cmd === "string" ? cmd : cmd && typeof cmd.str === "string" ? cmd.str : "";
+  if (!cmdstr) return;
+  scheduleSheetCommands(cmdstr, { saveundo: true });
 }
 
 /**
@@ -112,6 +90,7 @@ export function updateColumnResizeHandlePosition() {
     const cells = editor.fullgrid.querySelectorAll("td, th");
     for (let i = 0; i < cells.length; i++) {
       const c = cells[i];
+      if (isDataCellElement(c)) continue; // a cell whose value happens to be "B" is not header B
       const txt = c.textContent ? c.textContent.trim() : "";
       if (txt === colLetter) {
         const rect = c.getBoundingClientRect();
@@ -175,11 +154,14 @@ export function updateColumnResizeHandlePosition() {
     handle.title = "Drag to resize column";
     document.body.appendChild(handle);
 
-    // Attach drag handlers (both Touch and Mouse)
+    // Attach drag handlers (both Touch and Mouse). The handle outlives re-initialization,
+    // so look the editor up when the drag starts instead of keeping the one from creation time.
     const onStart = (startEvent) => {
       startEvent.stopPropagation();
       if (startEvent.cancelable) startEvent.preventDefault();
-      startCornerColumnResize(startEvent, editor, _selectedColNum);
+      const activeEditor = getActiveEditor();
+      if (!activeEditor || !_selectedColNum) return;
+      startCornerColumnResize(startEvent, activeEditor, _selectedColNum);
     };
 
     handle.addEventListener("touchstart", onStart, { passive: false });
@@ -298,6 +280,22 @@ export function startCornerColumnResize(startEvent, editor, colNum) {
 }
 
 /**
+ * Runs fn with range selection allowed. The build ships with Constants.SCNoRanging = true, which
+ * stops accidental drag-selection on touch screens but also made RangeExtend ignore these
+ * explicit row/column selections, so nothing was highlighted.
+ */
+function withRangingAllowed(fn) {
+  const constants = SocialCalc && SocialCalc.Constants;
+  const saved = constants ? constants.SCNoRanging : undefined;
+  if (constants) constants.SCNoRanging = false;
+  try {
+    fn();
+  } finally {
+    if (constants) constants.SCNoRanging = saved;
+  }
+}
+
+/**
  * Select and highlight an entire column
  * @param {number} colNum 1-based column number
  */
@@ -315,8 +313,10 @@ export function selectColumn(colNum) {
   if (editor.range && editor.range.hasrange) {
     editor.RangeRemove();
   }
-  editor.RangeAnchor(colLetter + "1");
-  editor.RangeExtend(colLetter + lastRow);
+  withRangingAllowed(() => {
+    editor.RangeAnchor(colLetter + "1");
+    editor.RangeExtend(colLetter + lastRow);
+  });
   editor.SchedulePositionCalculations();
   editor.ScheduleRender();
 
@@ -345,8 +345,10 @@ export function selectRow(rowNum) {
   if (editor.range && editor.range.hasrange) {
     editor.RangeRemove();
   }
-  editor.RangeAnchor("A" + rowNum);
-  editor.RangeExtend(lastColLetter + rowNum);
+  withRangingAllowed(() => {
+    editor.RangeAnchor("A" + rowNum);
+    editor.RangeExtend(lastColLetter + rowNum);
+  });
   editor.SchedulePositionCalculations();
   editor.ScheduleRender();
 }
@@ -462,6 +464,7 @@ export function enableRowColHeaders(customStyles) {
   }
   applyHeaderStyles(editor, customStyles ? { ...DEFAULT_HEADER_STYLES, ...customStyles } : DEFAULT_HEADER_STYLES);
   refreshEditor();
+  notifyPluginStateChange("rowColHeaders");
 }
 
 /**
@@ -486,6 +489,7 @@ export function disableRowColHeaders() {
 
   hideColumnResizeHandle();
   refreshEditor();
+  notifyPluginStateChange("rowColHeaders");
 }
 
 /**
@@ -521,6 +525,8 @@ if (typeof window !== "undefined") {
   window.addEventListener("resize", updateColumnResizeHandlePosition);
   window.addEventListener("socialcalc:horizontal-scroll", updateColumnResizeHandlePosition);
   window.addEventListener("socialcalc:scroll", updateColumnResizeHandlePosition);
+  // Column widths and scroll positions change after commands render (resize is asynchronous)
+  window.addEventListener("socialcalc:render", updateColumnResizeHandlePosition);
 }
 
 // Register as a plugin in the plugin manager

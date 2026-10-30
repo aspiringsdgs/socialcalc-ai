@@ -13,7 +13,8 @@
  *   disableTouchScroll();  // call on cleanup / unmount
  */
 
-import { SocialCalcRef } from "./runtime.js";
+import { SocialCalcRef, isDataCellElement } from "./runtime.js";
+import { isRowColHeadersEnabled } from "./row-col-headers.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -249,9 +250,14 @@ function handleTouchEnd(event) {
 
     const elapsed = performance.now() - _gesture.startTime;
 
-    // If we never crossed the deadzone and started with exactly 1 finger, treat as a tap
+    // A tap is one finger that stayed put. The scroll deadzone only measures vertical travel,
+    // so also check the total distance: a sideways swipe must not open the cell editor.
     if (!_gesture.isScrolling && _gesture.initialTouchCount === 1) {
-        handleTap(event, elapsed);
+        const end = event.changedTouches && event.changedTouches[0];
+        const travel = end ? Math.hypot(end.pageX - _gesture.startX, end.pageY - _gesture.startY) : 0;
+        if (travel <= TOUCH_SCROLL_CONFIG.tapMaxDistance) {
+            handleTap(event, elapsed);
+        }
         return;
     }
 
@@ -325,7 +331,9 @@ function handleTap(event, elapsed) {
             while (headerTd && headerTd.tagName !== "TD" && headerTd.tagName !== "TH" && headerTd !== document.body) {
                 headerTd = headerTd.parentNode;
             }
-            if (headerTd && (headerTd.tagName === "TD" || headerTd.tagName === "TH")) {
+            // Only real header cells count: a data cell whose text is "Er" or "12"
+            // must open the editor, not select column ER / row 12.
+            if (isRowColHeadersEnabled() && headerTd && (headerTd.tagName === "TD" || headerTd.tagName === "TH") && !isDataCellElement(headerTd)) {
                 const txt = headerTd.textContent ? headerTd.textContent.trim().toUpperCase() : "";
                 if (/^[A-Z]{1,2}$/.test(txt)) {
                     let colNum = 0;
@@ -363,8 +371,16 @@ function handleTap(event, elapsed) {
     // Check for double-tap
     if (_gesture.lastTapTime &&
         (now - _gesture.lastTapTime) < TOUCH_SCROLL_CONFIG.doubleTapMaxGap) {
-        // Double tap → trigger DoubleTap handler
         _gesture.lastTapTime = 0;
+        // With the edit modal, double-click does nothing; the first tap's pending SingleTap opens it
+        if (SocialCalc.isCellEditModalEnabled && SocialCalc.isCellEditModalEnabled()) {
+            return;
+        }
+        // Double tap → trigger DoubleTap handler, and drop the first tap's pending SingleTap
+        if (_gesture.tapTimeout) {
+            clearTimeout(_gesture.tapTimeout);
+            _gesture.tapTimeout = null;
+        }
         if (wobj.functionobj && wobj.functionobj.DoubleTap) {
             wobj.functionobj.DoubleTap(event, touchinfo, wobj);
         }

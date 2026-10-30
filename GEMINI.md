@@ -20,7 +20,7 @@
   3. Inspect `./socialcalc/components/` for React/Ionic modals, popovers, or scrollbars.
 - **Never break existing function signatures**. Always provide backwards-compatible aliases if refactoring function names (e.g. `export const initGridLines = enableGridLines;`).
 - Always check that any new React component can be rendered safely even if optional props are not passed.
-- **Mandatory Documentation Update**: Whenever you edit anything in `./socialcalc` for improvements, bug fixes, or new features, you MUST update both `socialcalc/README.md` and `docs/src/docsData.ts` (the dedicated documentation web app) to keep the documentation site and package documentation completely accurate and up-to-date.
+- **Mandatory Documentation Update**: Whenever you edit anything in `./socialcalc` for improvements, bug fixes, or new features, you MUST update both `socialcalc/README.md` and `docs-site/src/docsData.ts` (the dedicated documentation web app) to keep the documentation site and package documentation completely accurate and up-to-date.
 
 ### 3. Verification Commands
 Always execute and verify the following commands before reporting completion:

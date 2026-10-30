@@ -34,8 +34,9 @@ describe("Cell Edit Modal Plugin & Listeners", () => {
     AppGeneral.enableCellEditModal();
 
     // Mock SocialCalc environment with an active editor
-    const mockCell = { datavalue: 42, displaystring: "42" };
+    const mockCell = { datavalue: 42, datatype: "v", valuetype: "n" };
     const mockSheet = {
+      cells: { B2: mockCell } as Record<string, any>,
       GetAssuredCell: vi.fn(() => mockCell),
       attribs: { lastcol: 26, lastrow: 50 },
     };
@@ -75,23 +76,18 @@ describe("Cell Edit Modal Plugin & Listeners", () => {
     expect(receivedDetail.coord).toBe("B2");
     expect(receivedDetail.text).toBe("42");
     expect(typeof receivedDetail.okfn).toBe("function");
+    // Reading the cell must not create it
+    expect(mockSheet.GetAssuredCell).not.toHaveBeenCalled();
 
-    // Test okfn sets value and dispatches socialcalc:cell-change
-    let changeEventReceived: any = null;
-    const changeListener = (e: any) => {
-      changeEventReceived = e.detail;
-    };
-    window.addEventListener("socialcalc:cell-change", changeListener);
-
+    // okfn schedules the encoded command; "socialcalc:cell-change" is emitted by the event bus
+    // once the engine has actually run it (covered in the engine tests)
     receivedDetail.okfn("100");
     expect(mockEditor.EditorScheduleSheetCommands).toHaveBeenCalledWith("set B2 value n 100", true, false);
-    expect(changeEventReceived).toEqual({ coord: "B2", value: "100" });
 
     // Test formula handling in okfn
     receivedDetail.okfn("=SUM(A1:A5)");
     expect(mockEditor.EditorScheduleSheetCommands).toHaveBeenCalledWith("set B2 formula SUM(A1:A5)", true, false);
 
     window.removeEventListener("socialcalc:cell-edit-request", listener);
-    window.removeEventListener("socialcalc:cell-change", changeListener);
   });
 });
