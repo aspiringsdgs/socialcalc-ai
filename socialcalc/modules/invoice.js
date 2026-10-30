@@ -1,5 +1,5 @@
 // Invoice tracking functions
-import { SocialCalcRef } from "./runtime.js";
+import { SocialCalcRef, scheduleSheetCommands, encodeCommandText } from "./runtime.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -113,27 +113,27 @@ export function addInvoiceData(invoiceData) {
       if (invoiceData.billTo) {
         if (invoiceData.billTo.name) {
           commands.push(
-            `set ${coordinates.billTo.name} text t ${invoiceData.billTo.name}`
+            `set ${coordinates.billTo.name} text t ${encodeCommandText(invoiceData.billTo.name)}`
           );
         }
         if (invoiceData.billTo.streetAddress) {
           commands.push(
-            `set ${coordinates.billTo.streetAddress} text t ${invoiceData.billTo.streetAddress}`
+            `set ${coordinates.billTo.streetAddress} text t ${encodeCommandText(invoiceData.billTo.streetAddress)}`
           );
         }
         if (invoiceData.billTo.cityStateZip) {
           commands.push(
-            `set ${coordinates.billTo.cityStateZip} text t ${invoiceData.billTo.cityStateZip}`
+            `set ${coordinates.billTo.cityStateZip} text t ${encodeCommandText(invoiceData.billTo.cityStateZip)}`
           );
         }
         if (invoiceData.billTo.phone) {
           commands.push(
-            `set ${coordinates.billTo.phone} text t ${invoiceData.billTo.phone}`
+            `set ${coordinates.billTo.phone} text t ${encodeCommandText(invoiceData.billTo.phone)}`
           );
         }
         if (invoiceData.billTo.email) {
           commands.push(
-            `set ${coordinates.billTo.email} text t ${invoiceData.billTo.email}`
+            `set ${coordinates.billTo.email} text t ${encodeCommandText(invoiceData.billTo.email)}`
           );
         }
       }
@@ -142,27 +142,27 @@ export function addInvoiceData(invoiceData) {
       if (invoiceData.from) {
         if (invoiceData.from.name) {
           commands.push(
-            `set ${coordinates.from.name} text t ${invoiceData.from.name}`
+            `set ${coordinates.from.name} text t ${encodeCommandText(invoiceData.from.name)}`
           );
         }
         if (invoiceData.from.streetAddress) {
           commands.push(
-            `set ${coordinates.from.streetAddress} text t ${invoiceData.from.streetAddress}`
+            `set ${coordinates.from.streetAddress} text t ${encodeCommandText(invoiceData.from.streetAddress)}`
           );
         }
         if (invoiceData.from.cityStateZip) {
           commands.push(
-            `set ${coordinates.from.cityStateZip} text t ${invoiceData.from.cityStateZip}`
+            `set ${coordinates.from.cityStateZip} text t ${encodeCommandText(invoiceData.from.cityStateZip)}`
           );
         }
         if (invoiceData.from.phone) {
           commands.push(
-            `set ${coordinates.from.phone} text t ${invoiceData.from.phone}`
+            `set ${coordinates.from.phone} text t ${encodeCommandText(invoiceData.from.phone)}`
           );
         }
         if (invoiceData.from.email) {
           commands.push(
-            `set ${coordinates.from.email} text t ${invoiceData.from.email}`
+            `set ${coordinates.from.email} text t ${encodeCommandText(invoiceData.from.email)}`
           );
         }
       }
@@ -171,12 +171,12 @@ export function addInvoiceData(invoiceData) {
       if (invoiceData.invoice) {
         if (invoiceData.invoice.number) {
           commands.push(
-            `set ${coordinates.invoice.number} text t ${invoiceData.invoice.number}`
+            `set ${coordinates.invoice.number} text t ${encodeCommandText(invoiceData.invoice.number)}`
           );
         }
         if (invoiceData.invoice.date) {
           commands.push(
-            `set ${coordinates.invoice.date} text t ${invoiceData.invoice.date}`
+            `set ${coordinates.invoice.date} text t ${encodeCommandText(invoiceData.invoice.date)}`
           );
         }
       }
@@ -202,7 +202,7 @@ export function addInvoiceData(invoiceData) {
           if (row <= coordinates.items.endRow) {
             if (item.description) {
               commands.push(
-                `set ${coordinates.items.descriptionColumn}${row} text t ${item.description}`
+                `set ${coordinates.items.descriptionColumn}${row} text t ${encodeCommandText(item.description)}`
               );
             }
             if (item.amount !== undefined && item.amount !== "") {
@@ -230,7 +230,7 @@ export function addInvoiceData(invoiceData) {
 
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         resolve(true);
       } catch (execError) {
         throw execError;
@@ -377,7 +377,7 @@ export function addDynamicInvoiceData(cellData, sheetId) {
 
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         resolve(true);
       } catch (execError) {
         throw execError;
@@ -463,7 +463,7 @@ export function clearDynamicInvoiceData(cellData) {
 
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         resolve(true);
       } catch (execError) {
         throw execError;
@@ -540,7 +540,7 @@ export function clearInvoiceData() {
 
 
       try {
-        control.ExecuteWorkBookControlCommand(commandObj, false);
+        scheduleSheetCommands(commandObj.cmdstr, { saveundo: commandObj.saveundo, sheet: commandObj.id });
         resolve(true);
       } catch (execError) {
         throw execError;

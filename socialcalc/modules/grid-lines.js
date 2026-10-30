@@ -4,7 +4,7 @@
  * Dynamically toggles spreadsheet cell grid lines on/off.
  */
 
-import { getActiveEditor, getActiveSpreadsheet, registerPlugin } from "./plugin-manager.js";
+import { getActiveEditor, getActiveSpreadsheet, registerPlugin, notifyPluginStateChange } from "./plugin-manager.js";
 
 import { SocialCalcRef } from "./runtime.js";
 
@@ -60,6 +60,7 @@ export function enableGridLines(gridCss = DEFAULT_GRID_CSS) {
   }
 
   refreshEditor();
+  notifyPluginStateChange("gridLines");
 }
 
 export const initGridLines = enableGridLines;
@@ -86,6 +87,7 @@ export function disableGridLines() {
   }
 
   refreshEditor();
+  notifyPluginStateChange("gridLines");
 }
 
 /**

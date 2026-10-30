@@ -49,6 +49,12 @@ export function initializeApp(data) {
   // Fallback to the first candidate if none exist; WorkBookControl will create inner elements
   if (!workbookControlId) workbookControlId = workbookControlCandidates[0];
 
+  // Re-initializing (React StrictMode, remounting a page) must not stack a second set of sheet
+  // tabs with duplicate ids into the container; the table editor clears its own node already
+  const workbookControlEl = document.getElementById(workbookControlId);
+  if (workbookControlEl) workbookControlEl.innerHTML = "";
+  SocialCalc.oldBtnActive = null;
+
   let workbookcontrol = new SocialCalc.WorkBookControl(
     workbook,
     workbookControlId,

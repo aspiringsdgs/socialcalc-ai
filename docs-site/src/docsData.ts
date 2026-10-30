@@ -67,7 +67,7 @@ Want AI agents like Claude to build these workbooks for you? See the [SocialCalc
     category: "Getting Started",
     title: "Installation & Package Setup",
     description: "Install socialcalc-ai via npm, yarn, pnpm, or bun with optional peer dependencies.",
-    badge: "npm v1.0.9",
+    badge: "npm v1.1.2",
     content: `
 ### Installing SocialCalc AI
 
@@ -87,11 +87,21 @@ pnpm add socialcalc-ai
 bun add socialcalc-ai
 \`\`\`
 
-#### Peer Dependencies (UI Components):
-If you use the built-in React & Ionic UI components (\`CellEditModal\`, \`HorizontalScrollBar\`, \`RowActionPopover\`, \`EditableCellsModal\`), ensure peer dependencies are installed in your host app:
+#### Entry points & peer dependencies
+The package ships compiled ES modules, so it works in Vite, webpack, Create React App and Next.js without extra transpile settings.
+
+| Import from | Contains | Needs |
+| :--- | :--- | :--- |
+| \`socialcalc-ai/react\` | Engine, all plugins, \`CellEditModal\`, \`HorizontalScrollBar\`, \`RowActionPopover\` | \`react\`, \`react-dom\` |
+| \`socialcalc-ai/ionic\` | \`EditableCellsModal\`, \`DemoVideosModal\`, \`AgentModal\`, \`AgentPluginTest\` | \`@ionic/react\`, \`ionicons\` |
+| \`socialcalc-ai\` | Everything above | all four |
 
 \`\`\`bash
-npm install react react-dom @ionic/react ionicons
+# Any React app (import from "socialcalc-ai/react")
+npm install socialcalc-ai react react-dom
+
+# Ionic apps, or when using the root entry / Ionic-based components
+npm install socialcalc-ai react react-dom @ionic/react ionicons
 \`\`\`
 
 > 💡 **Headless / Vanilla JS**: Peer dependencies are completely optional if you are consuming the core spreadsheet calculation engine or plugins in pure JavaScript, Node.js, or non-React web apps.
@@ -114,10 +124,11 @@ npm install @capacitor/filesystem @capacitor/share capacitor-email-composer @bcy
     codeSnippet: {
       language: "bash",
       code: `# Install the published npm package
-npm install socialcalc-ai
+npm install socialcalc-ai react react-dom
 
-# Optional: React & Ionic peer dependencies for UI controls
-npm install react react-dom @ionic/react ionicons`,
+# Plain React app: import { initializeApp, CellEditModal } from "socialcalc-ai/react"
+# Ionic app: also install the Ionic peers and import from "socialcalc-ai"
+npm install @ionic/react ionicons`,
     },
   },
   {
@@ -245,11 +256,11 @@ The engine talks to your UI through \`CustomEvent\`s on \`window\`, named \`soci
 
 | Event | \`event.detail\` | Fired when |
 | :--- | :--- | :--- |
-| \`socialcalc:cell-edit-request\` | \`{ coord, text, okfn, cleanup }\` | A cell is tapped with the Cell Edit Modal plugin on |
-| \`socialcalc:row-header-click\` | \`{ rowNum, clientX, clientY }\` | A row number is clicked |
-| \`socialcalc:cell-change\` | \`{ coord, value, range, sheetId, kind, cmdstr, changes, source }\` | A cell edit is committed |
-| \`socialcalc:horizontal-scroll\` | \`{ currentFirstCol, currentLastCol, currentColName, lastColName, totalCols }\` | The first visible column changes |
-| \`socialcalc:plugin-change\` | \`{ plugin, enabled }\` | A plugin is registered, enabled or disabled |
+| \`socialcalc:cell-edit-request\` | \`{ coord, text, okfn, cleanup }\` | A cell is tapped with the Cell Edit Modal plugin on. \`text\` is the editable text (\`=SUM(A1:A3)\`, \`$1,200\`) |
+| \`socialcalc:row-header-click\` | \`{ rowNum, clientX, clientY }\` | A row number is clicked (headers shown) |
+| \`socialcalc:cell-change\` | \`{ coord, value, range, sheetId, kind, cmdstr, changes, source }\` | A command that changes cells has run: modal, built-in editor, undo/redo, paste, row inserts or the API |
+| \`socialcalc:horizontal-scroll\` | \`{ currentFirstCol, currentLastCol, currentColName, lastColName, totalCols }\` | The first visible column changes, including keyboard and selection moves |
+| \`socialcalc:plugin-change\` | \`{ plugin, enabled }\` | A plugin's state changes, whether switched by name or directly (e.g. \`enableGridLines()\`) |
 | \`socialcalc:agent-action\` | \`{ actions, commands, results, timestamp }\` | The AI agent applies actions |
 
 For cell changes you can also use \`setupCellChangeListener(fn)\`, which returns an unsubscribe function.
@@ -355,9 +366,9 @@ Supporting modules: \`formatting.js\` (colors, fonts, borders), \`history.js\` (
 ![Drag handle with a live column width indicator](/screenshots/col-resize-picker.png)
 
 ### Plugin Manager
-Plugins that register with the Plugin Manager can be controlled by name: \`enablePlugin\`, \`disablePlugin\`, \`togglePlugin\`, \`configurePlugin\`, \`isPluginEnabled\` and \`getPlugin\`. The built-in names are \`rowColHeaders\`, \`gridLines\`, \`horizontalScroll\`, \`cellEditModal\`, \`editableCellsOnly\`, \`agent\`, \`pdfExport\` and \`share\`. Every change fires \`socialcalc:plugin-change\`.
+Plugins that register with the Plugin Manager can be controlled by name: \`enablePlugin\`, \`disablePlugin\`, \`togglePlugin\`, \`configurePlugin\`, \`isPluginEnabled\` and \`getPlugin\`. The built-in names are \`rowColHeaders\`, \`gridLines\`, \`horizontalScroll\`, \`cellEditModal\`, \`editableCellsOnly\`, \`agent\`, \`pdfExport\` and \`share\`. Every state change fires \`socialcalc:plugin-change\` and \`subscribePluginChanges\` listeners once, also when a plugin is switched directly with its own function such as \`enableGridLines()\`, so toggles in your UI stay in sync.
 
-To add your own, register an object with \`enable\`, \`disable\` and optionally \`isEnabled\`, \`configure\` and \`metadata\`. See \`AGENTS.md\` for the full checklist when adding a plugin to the package itself.
+To add your own, register an object with \`enable\`, \`disable\` and optionally \`isEnabled\`, \`configure\` and \`metadata\`. If your plugin also has its own enable/disable functions, call \`notifyPluginStateChange(name)\` at the end of them. See \`AGENTS.md\` for the full checklist when adding a plugin to the package itself.
     `,
     codeSnippet: {
       language: "javascript",
@@ -465,7 +476,7 @@ executeAgentActions(actions);`,
     description: "Props and usage for the seven UI components that ship with socialcalc-ai.",
     badge: "UI Suite",
     content: `
-All components are exported from \`socialcalc-ai\` and need the React and Ionic peer dependencies. They don't hold spreadsheet state themselves: the engine fires window events, and you pass the event detail in as props.
+\`CellEditModal\`, \`HorizontalScrollBar\` and \`RowActionPopover\` only need React and are exported from \`socialcalc-ai/react\`. \`EditableCellsModal\`, \`DemoVideosModal\`, \`AgentModal\` and \`AgentPluginTest\` are built on Ionic and are exported from \`socialcalc-ai/ionic\`. The root \`socialcalc-ai\` entry exports all of them. Components don't hold spreadsheet state themselves: the engine fires window events, and you pass the event detail in as props.
 
 ### CellEditModal
 A touch-first editor that opens when a cell is tapped (with the Cell Edit Modal plugin on). It edits text, numbers and formulas, and its **Options** panel sets text color, background color, number format and borders, and inserts a compressed image.
@@ -488,6 +499,8 @@ A touch-first editor that opens when a cell is tapped (with the Cell Edit Modal 
 ![Border controls](/screenshots/edit-cell-model-cell-borders.png)
 
 The color palettes are exported as \`FONT_COLORS\` and \`BG_COLORS\` if you want to reuse them.
+
+Apply commits through \`commitCellEdit(coord, value, formatting?)\`, which you can also call from your own editor. It runs the hooks registered with \`addBeforeCellCommitHook\` (return \`false\` to reject; the modal stays open), stores typed currency, percentages and dates as numbers like the built-in editor, writes value and formatting as one undo step and waits for a running recalculation. An unchanged value is not rewritten; pass \`undefined\` to change formatting only.
 
 ### HorizontalScrollBar
 A column slider with step buttons and a \`Col A (1/26)\` indicator. It stays in sync with keyboard and touch scrolling.
@@ -670,6 +683,8 @@ Templates such as \`src/data/100001.json\` wrap the workbook with what an app ne
 | \`appMapping\` | Named fields per sheet. \`text\` maps one cell, \`form\` groups fields, \`table\` maps columns over a row range |
 
 \`appMapping\` powers three things: the Editable Cells plugin (only mapped cells can be edited when it's on), \`EditableCellsModal\`, and the AI agent, which can write to \`BillTo.Name\` instead of guessing \`C5\`.
+
+**Checkbox cells:** a cell listed in \`msc.EditableCells.constraints\` with \`["tc"]\` (e.g. \`"sheet1!H10": ["tc"]\`) toggles a checkmark on tap, once per tap, as an undoable sheet command. The checkmark is \`<img src="checkmark.png">\`; change it with \`SocialCalc.ToggleCellSettings.checkedHTML\`.
     `,
     codeSnippet: {
       language: "javascript",
@@ -701,7 +716,7 @@ These functions are in the main \`socialcalc-ai\` entry and need no extra depend
 | :--- | :--- |
 | \`activateFooterButton(index)\` | Switch to a sheet by its 1-based tab index |
 | \`getAllSheetsData()\` | Every sheet's id, name and rendered HTML (used by PDF export) |
-| \`executeSheetCommand(cmd)\` | Run a SocialCalc command on the active sheet, e.g. \`set A1 text t hello\` |
+| \`executeSheetCommand(cmd)\` | Run a SocialCalc command on the active sheet as its own undo step, e.g. \`set A1 text t hello\`. Asynchronous; formulas recalculate and \`cell-change\` fires |
 | \`undo()\`, \`redo()\` | Command history |
 
 #### Content
@@ -872,7 +887,7 @@ When modifying or improving any code in \`./socialcalc\`:
 #### 2. Mandatory Documentation Synchronization Rule
 > **CRITICAL RULE**: Whenever you edit, enhance, or fix anything in \`./socialcalc\` (new plugins, updated props, modified APIs, new formulas), you **MUST synchronously update the documentation**:
 > - Update \`socialcalc/README.md\` in the package root.
-> - Update \`docs/src/docsData.ts\` so this documentation website displays the new feature, props, and examples.
+> - Update \`docs-site/src/docsData.ts\` so this documentation website displays the new feature, props, and examples.
 > - Never leave code changes undocumented.
 
 #### 3. Verification Commands
@@ -886,7 +901,7 @@ node test-socialcalc.js  # Modularization integrity check
 ### Showcase app & screenshots
 \`src/\` is a test app that uses every feature of the package through the \`socialcalc\` alias (see \`vite.config.ts\`). Run it with \`npm run dev\` from the repo root and open http://localhost:5173. The toolbar opens every modal, and the pills toggle each plugin.
 
-The screenshots in these docs (\`docs/public/screenshots/live/\`) are captured from that app with Playwright. After changing the UI, regenerate them:
+The screenshots in these docs (\`docs-site/public/screenshots/live/\`) are captured from that app with Playwright. After changing the UI, regenerate them:
 
 \`\`\`bash
 npm run dev                                  # repo root: start the showcase app
@@ -897,13 +912,13 @@ npm run screenshots -- agent                 # one shot: studio-overview, agent,
 \`\`\`
 
 ### This documentation site
-The site is in \`docs/\`. Content lives in data files, one per package:
+The site is in \`docs-site/\`. Content lives in data files, one per package:
 
 | File | Route |
 | :--- | :--- |
-| \`docs/src/docsData.ts\` | \`/socialcalc\` (this page) |
-| \`docs/src/mcpDocsData.ts\` | \`/mcp\` |
-| \`docs/src/siteConfig.ts\` | Package versions, links and the dashboard video |
+| \`docs-site/src/docsData.ts\` | \`/socialcalc\` (this page) |
+| \`docs-site/src/mcpDocsData.ts\` | \`/mcp\` |
+| \`docs-site/src/siteConfig.ts\` | Package versions, links and the dashboard video |
     `,
     codeSnippet: {
       language: "bash",

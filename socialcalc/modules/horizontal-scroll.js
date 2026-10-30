@@ -5,9 +5,10 @@
  * to smoothly scroll spreadsheets horizontally.
  */
 
-import { getActiveEditor, registerPlugin } from "./plugin-manager.js";
+import { getActiveEditor, registerPlugin, notifyPluginStateChange } from "./plugin-manager.js";
 
 import { SocialCalcRef } from "./runtime.js";
+import { on as onBusEvent } from "./events.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -112,8 +113,11 @@ export function subscribeHorizontalScroll(listener) {
   return () => _scrollListeners.delete(listener);
 }
 
+let _lastNotifiedKey = null;
+
 function notifyScrollChange() {
   const info = getHorizontalScrollInfo();
+  _lastNotifiedKey = `${info.currentFirstCol}:${info.totalCols}`;
   for (const listener of _scrollListeners) {
     try {
       listener(info);
@@ -140,6 +144,7 @@ export function enableHorizontalScroll(options = {}) {
     mountHorizontalScrollBar(options.container, options);
   }
   notifyScrollChange();
+  notifyPluginStateChange("horizontalScroll");
 }
 
 /**
@@ -149,6 +154,7 @@ export function disableHorizontalScroll() {
   _enabled = false;
   unmountHorizontalScrollBar();
   notifyScrollChange();
+  notifyPluginStateChange("horizontalScroll");
 }
 
 /**
@@ -317,6 +323,14 @@ export function unmountHorizontalScrollBar() {
   _domElement = null;
   _domContainer = null;
 }
+
+// The grid also scrolls sideways without this module (arrow keys, the selection moving
+// off-screen, loading a sheet). After each render, tell listeners if the visible columns changed,
+// so sliders and HorizontalScrollBar stay in sync.
+onBusEvent("render", () => {
+  const info = getHorizontalScrollInfo();
+  if (`${info.currentFirstCol}:${info.totalCols}` !== _lastNotifiedKey) notifyScrollChange();
+});
 
 // Register as a plugin in the plugin manager
 registerPlugin("horizontalScroll", {

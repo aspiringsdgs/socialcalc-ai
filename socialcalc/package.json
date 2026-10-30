@@ -1,48 +1,73 @@
 {
   "name": "socialcalc-ai",
-  "version": "1.0.10",
+  "version": "1.1.2",
   "description": "Modernized, modular spreadsheet calculation engine and React/Ionic UI suite with AI formula and template capabilities.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aspiringsdgs/socialcalc-ai.git",
+    "directory": "socialcalc"
+  },
+  "bugs": {
+    "url": "https://github.com/aspiringsdgs/socialcalc-ai/issues"
+  },
+  "homepage": "https://github.com/aspiringsdgs/socialcalc-ai#readme",
   "type": "module",
-  "main": "index.js",
-  "module": "index.js",
-  "types": "index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "react": [
+        "dist/react.d.ts"
+      ],
+      "ionic": [
+        "dist/ionic.d.ts"
+      ],
+      "pdf-export": [
+        "dist/pdf-export.d.ts"
+      ],
+      "share": [
+        "dist/share.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "default": "./index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
+    },
+    "./ionic": {
+      "types": "./dist/ionic.d.ts",
+      "import": "./dist/ionic.js",
+      "default": "./dist/ionic.js"
     },
     "./pdf-export": {
-      "types": "./pdf-export.d.ts",
-      "import": "./pdf-export.js",
-      "default": "./pdf-export.js"
+      "types": "./dist/pdf-export.d.ts",
+      "import": "./dist/pdf-export.js",
+      "default": "./dist/pdf-export.js"
     },
     "./share": {
-      "types": "./share.d.ts",
-      "import": "./share.js",
-      "default": "./share.js"
+      "types": "./dist/share.d.ts",
+      "import": "./dist/share.js",
+      "default": "./dist/share.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "core",
-    "modules",
-    "components",
-    "utils",
-    "index.js",
-    "index.d.ts",
-    "pdf-export.js",
-    "pdf-export.d.ts",
-    "share.js",
-    "share.d.ts",
-    "README.md",
-    "!**/*.test.ts",
-    "!**/*.test.js",
-    "!**/*.spec.ts",
-    "!**/*.spec.js"
+    "dist",
+    "README.md"
   ],
   "scripts": {
-    "test": "vitest run"
+    "build": "node scripts/build.mjs",
+    "test": "npm --prefix .. run test:lib",
+    "test:smoke": "npm --prefix .. run test:smoke",
+    "prepublishOnly": "npm --prefix .. run test:lib && node scripts/build.mjs"
   },
   "keywords": [
     "socialcalc",
@@ -67,6 +92,9 @@
   "license": "MIT",
   "dependencies": {
     "marked": "^15.0.7"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
   },
   "peerDependencies": {
     "@ionic/react": ">=7.0.0",

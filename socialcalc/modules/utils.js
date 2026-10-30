@@ -10,20 +10,23 @@ import { SocialCalcRef } from "./runtime.js";
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
 
+/**
+ * Asks for a file name.
+ * @returns {Promise<string | null>} the name, or null when the user cancels
+ */
 export function saveAs() {
   return new Promise(function (resolve, reject) {
     // Outside Cordova there is no navigator.notification; fall back to the browser prompt
     if (typeof navigator === "undefined" || !navigator.notification || !navigator.notification.prompt) {
       var name = typeof window !== "undefined" && window.prompt ? window.prompt("Please enter the filename", "") : null;
-      if (name) resolve(name);
+      // Resolve on cancel too, so callers awaiting the name do not hang forever
+      resolve(name ? name : null);
       return;
     }
     navigator.notification.prompt(
       "Please enter the filename", // message
       function (results) {
-        if (results.buttonIndex === 2) {
-          resolve(results.input1);
-        }
+        resolve(results.buttonIndex === 2 && results.input1 ? results.input1 : null);
       }, // callback to invoke
       "Save as", // title
       ["Cancel", "Save"], // buttonLabels
@@ -59,7 +62,13 @@ export function getAllOldFiles() {
       )
         continue;
       /// console.log(filename);
-      var filedata = decodeURIComponent(window.localStorage.getItem(filename));
+      var raw = window.localStorage.getItem(filename);
+      var filedata;
+      try {
+        filedata = decodeURIComponent(raw);
+      } catch (e) {
+        filedata = raw; // stored without URI encoding (e.g. contains a bare "%"); one bad entry must not fail the list
+      }
 
       files[filename] = filedata;
     }
@@ -85,10 +94,16 @@ export function showFormattingButtons(coord, callback) {
     window.cellFormattingInstance.hideButtons();
   }
 
+  let closeOnClickOutside = null;
   window.cellFormattingInstance = {
     coord: coord,
     callback: callback,
     hideButtons: function () {
+      // Also drop this popup's outside-click listener; a leftover one would close the next popup
+      if (closeOnClickOutside) {
+        document.removeEventListener("click", closeOnClickOutside);
+        closeOnClickOutside = null;
+      }
       const existingButtons = document.getElementById(
         "cell-formatting-buttons"
       );
@@ -97,6 +112,7 @@ export function showFormattingButtons(coord, callback) {
       }
     },
   };
+  const instance = window.cellFormattingInstance;
 
   const control = SocialCalc.GetCurrentWorkBookControl();
   const editor = control.workbook.spreadsheet.editor;
@@ -247,27 +263,28 @@ export function showFormattingButtons(coord, callback) {
       }
     } else if (e.target.id === "apply-formatting") {
       applySelectedFormatting(coord, selectedFormatting);
-      window.cellFormattingInstance.hideButtons();
+      instance.hideButtons();
       if (callback) callback();
     } else if (e.target.id === "reset-formatting") {
       resetCellFormatting(coord);
-      window.cellFormattingInstance.hideButtons();
+      instance.hideButtons();
       if (callback) callback();
     } else if (e.target.id === "cancel-formatting") {
-      window.cellFormattingInstance.hideButtons();
+      instance.hideButtons();
       if (callback) callback();
     }
   });
 
   // Add close on click outside
   setTimeout(() => {
-    document.addEventListener("click", function closeOnClickOutside(e) {
+    if (window.cellFormattingInstance !== instance || !buttonsContainer.isConnected) return; // already closed
+    closeOnClickOutside = function (e) {
       if (!buttonsContainer.contains(e.target)) {
-        window.cellFormattingInstance.hideButtons();
-        document.removeEventListener("click", closeOnClickOutside);
+        instance.hideButtons();
         if (callback) callback();
       }
-    });
+    };
+    document.addEventListener("click", closeOnClickOutside);
   }, 100);
 }
 

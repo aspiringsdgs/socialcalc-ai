@@ -5,13 +5,22 @@ import { SocialCalcRef } from "./runtime.js";
 let SocialCalc = SocialCalcRef;
 
 export function activateFooterButton(index) {
-  if (index === SocialCalc.oldBtnActive) return;
-  var control = SocialCalc.GetCurrentWorkBookControl();
+  var control = SocialCalc.GetCurrentWorkBookControl ? SocialCalc.GetCurrentWorkBookControl() : null;
+  if (!control || !control.sheetButtonArr) return;
 
   var sheets = [];
   for (var key in control.sheetButtonArr) {
     //console.log(key);
     sheets.push(key);
+  }
+  var targetId = sheets[index - 1];
+  if (!targetId) return;
+
+  // Compare with the sheet that is really active, not a cached index: loading another workbook
+  // or switching sheets through other APIs used to leave the cache stale, so the switch was skipped
+  if (control.currentSheetButton && control.currentSheetButton.id === targetId) {
+    SocialCalc.oldBtnActive = index;
+    return;
   }
   var spreadsheet = control.workbook.spreadsheet;
   var ele = document.getElementById(spreadsheet.formulabarDiv.id);
@@ -21,12 +30,13 @@ export function activateFooterButton(index) {
     input.style.display = "none";
     spreadsheet.editor.state = "start";
   }
-  SocialCalc.WorkBookControlActivateSheet(sheets[index - 1]);
+  SocialCalc.WorkBookControlActivateSheet(targetId);
 
   SocialCalc.oldBtnActive = index;
 }
 
 export function viewFile(filename, data) {
+  SocialCalc.oldBtnActive = null;
   SocialCalc.WorkBookControlInsertWorkbook(data);
 
   SocialCalc.GetCurrentWorkBookControl().workbook.spreadsheet.editor.state =
@@ -56,6 +66,7 @@ export function loadWorkbookData(data) {
     SocialCalc = window.SocialCalc;
   }
   if (!SocialCalc || !SocialCalc.WorkBookControlLoad) return;
+  SocialCalc.oldBtnActive = null;
   SocialCalc.WorkBookControlLoad(data);
   const control = SocialCalc.GetCurrentWorkBookControl();
   if (control && control.workbook && control.workbook.spreadsheet) {

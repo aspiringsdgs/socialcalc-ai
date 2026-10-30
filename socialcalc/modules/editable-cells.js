@@ -5,7 +5,7 @@
  * explicitly defined as editable in the template (via SocialCalc.EditableCells).
  */
 
-import { registerPlugin, getActiveEditor } from "./plugin-manager.js";
+import { registerPlugin, getActiveEditor, notifyPluginStateChange } from "./plugin-manager.js";
 
 import { SocialCalcRef } from "./runtime.js";
 
@@ -29,6 +29,7 @@ export function enableEditableCellsOnly() {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isEditableCellsOnlyEnabled = () => true;
   }
+  notifyPluginStateChange("editableCellsOnly");
 }
 
 /**
@@ -40,6 +41,7 @@ export function disableEditableCellsOnly() {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isEditableCellsOnlyEnabled = () => false;
   }
+  notifyPluginStateChange("editableCellsOnly");
 }
 
 /**
@@ -59,6 +61,7 @@ export function toggleEditableCellsOnly(show) {
     window.SocialCalc = window.SocialCalc || {};
     window.SocialCalc.isEditableCellsOnlyEnabled = () => _editableCellsOnlyEnabled;
   }
+  notifyPluginStateChange("editableCellsOnly");
   return _editableCellsOnlyEnabled;
 }
 
