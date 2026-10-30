@@ -132,10 +132,11 @@ try {
     writeFileSync(`${process.env.DUMP_DIR}/saved.json`, saved);
     writeFileSync(`${process.env.DUMP_DIR}/restored.json`, restored);
   }
-  // Re-serialising a loaded workbook is not byte-stable by itself: the engine hands out new sheet ids
-  // (sheet2 -> sheet5) and the app's open path drops EditableCells, exactly as for Tornado/Upload JSON.
-  // So compare what the user sees: every sheet's name and savestr, in order.
+  // Re-serialising a loaded workbook is not byte-stable by itself (the timestamp and EditableCells
+  // can differ), so compare what the user sees: every sheet's name and savestr, in order.
   const sheets = (m) => JSON.stringify(Object.values(JSON.parse(m).sheetArr).map((x) => [x.name, x.sheetstr.savestr]));
+  const ids = (m) => Object.keys(JSON.parse(m).sheetArr).join(",");
+  ok("sheet ids are not renumbered by open", ids(restored) === ids(saved), `${ids(saved)} -> ${ids(restored)}`);
   ok("restored sheets have byte-identical content", sheets(restored) === sheets(saved), `saved=${sheets(saved).length} restored=${sheets(restored).length}`);
   await page.screenshot({ path: `${SHOTS}/helia-2-restored.png` });
 
