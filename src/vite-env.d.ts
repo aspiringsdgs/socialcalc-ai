@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_API_BASE_URL: string;
+  /** Tornado base URL; empty = relative URLs via the Vite dev proxy */
+  readonly VITE_API_BASE_URL?: string;
+  /** "tornado" (default) or "none" */
+  readonly VITE_STORAGE_BACKEND?: string;
 }
 
 interface ImportMeta {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   IonApp,
   IonHeader,
@@ -9,6 +9,7 @@ import {
   IonIcon,
   IonContent,
   IonToast,
+  IonAlert,
   IonModal,
   IonSegment,
   IonSegmentButton,
@@ -59,6 +60,9 @@ import { Share } from "@capacitor/share";
 import { EmailComposer } from "capacitor-email-composer";
 import { Printer } from "@bcyesil/capacitor-plugin-printer";
 import ExportSharePanel from "./ExportSharePanel";
+import { LoginModal, OpenModal } from "./StorageControls";
+import { STORAGE_BACKEND } from "./storage/config";
+import { tornadoAdapter, describeStorageError, StorageError, type SheetInfo } from "./storage/tornadoAdapter";
 
 // Standard MSC templates from src/data
 import template100001 from "./data/100001.json";
@@ -126,6 +130,7 @@ const App: React.FC = () => {
 
   const [showToast, setShowToast] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
+  const [toastDuration, setToastDuration] = useState(2000);
   const [lastEditedCell, setLastEditedCell] = useState<string>("None");
 
   // Plugin toggles state
@@ -177,9 +182,146 @@ const App: React.FC = () => {
     { name: "default", label: "Default", hex: "#f4f5f8" },
   ];
 
-  const notify = (msg: string) => {
+  const notify = (msg: string, duration = 2000) => {
     setToastMsg(msg);
+    setToastDuration(duration);
     setShowToast(true);
+  };
+
+  // ── Backend storage (Tornado) ──────────────────────────────────────────
+  const storageEnabled = STORAGE_BACKEND === "tornado";
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [currentSheetName, setCurrentSheetName] = useState<string | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showOpenModal, setShowOpenModal] = useState(false);
+  const [openList, setOpenList] = useState<SheetInfo[] | null>(null);
+  const [saveAsOpen, setSaveAsOpen] = useState(false);
+  const [overwriteName, setOverwriteName] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string | null>(null);
+
+  /** Toast a storage failure; a 401 also logs out locally and opens the login modal. */
+  const handleStorageError = (err: unknown, action: string) => {
+    notify(describeStorageError(err, action), 4000);
+    if (err instanceof StorageError && err.status === 401 && action !== "Login") {
+      setLoggedIn(false);
+      setUserEmail(null);
+      setShowLoginModal(true);
+    }
+  };
+
+  // Is there already a valid session cookie? (list is cheap and creates nothing)
+  useEffect(() => {
+    if (!storageEnabled) return;
+    tornadoAdapter
+      .list()
+      .then(() => setLoggedIn(true))
+      .catch((err) => {
+        if (!(err instanceof StorageError && err.status === 401)) notify(describeStorageError(err, "Connect"), 4000);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const res = await tornadoAdapter.login(email, password);
+      setLoggedIn(true);
+      setUserEmail(res.user);
+      setShowLoginModal(false);
+      notify(`Logged in as ${res.user}`);
+    } catch (err) {
+      if (err instanceof StorageError && err.status === 401) notify("Invalid email or password (HTTP 401)", 4000);
+      else handleStorageError(err, "Login");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await tornadoAdapter.logout();
+      setLoggedIn(false);
+      setUserEmail(null);
+      notify("Logged out");
+    } catch (err) {
+      handleStorageError(err, "Logout");
+    }
+  };
+
+  const doSave = async (name: string) => {
+    try {
+      // the RAW save string, same call as "View Save Data"
+      await tornadoAdapter.save(name, AppGeneral.getSpreadsheetContent());
+      setCurrentSheetName(name);
+      setLoggedIn(true);
+      notify(`Saved "${name}"`);
+    } catch (err) {
+      handleStorageError(err, "Save");
+    }
+  };
+
+  // Stable reference: a new `inputs` array on re-render (e.g. a toast dismissing) makes Ionic
+  // reset what the user has typed into the alert.
+  const saveAsInputs = useMemo(
+    () => [{ name: "name", type: "text" as const, placeholder: "Sheet name", value: currentSheetName ?? "" }],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [saveAsOpen],
+  );
+
+  const handleSave = () => (currentSheetName ? doSave(currentSheetName) : setSaveAsOpen(true));
+
+  const handleSaveAsName = async (name: string) => {
+    name = name.trim();
+    if (!name) return notify("Enter a sheet name", 3000);
+    if (name !== currentSheetName) {
+      try {
+        const existing = await tornadoAdapter.list();
+        if (existing.some((s) => s.name === name)) return setOverwriteName(name);
+      } catch (err) {
+        return handleStorageError(err, "Save");
+      }
+    }
+    await doSave(name);
+  };
+
+  const handleOpenClick = async () => {
+    setShowOpenModal(true);
+    setOpenList(null);
+    try {
+      setOpenList(await tornadoAdapter.list());
+      setLoggedIn(true);
+    } catch (err) {
+      setShowOpenModal(false);
+      handleStorageError(err, "Open");
+    }
+  };
+
+  const handleOpenSheet = async (name: string) => {
+    try {
+      const { data } = await tornadoAdapter.load(name);
+      // same path as "Upload JSON": parseMSCFile -> applyTemplate -> loadWorkbookData
+      let parsed;
+      try {
+        parsed = AppGeneral.parseMSCFile(data);
+      } catch {
+        return notify(`"${name}" is not a SocialCalc workbook`, 4000);
+      }
+      setShowOpenModal(false);
+      setSelectedTemplateKey("custom");
+      applyTemplate(parsed, name);
+      setCurrentSheetName(name);
+    } catch (err) {
+      handleStorageError(err, "Open");
+    }
+  };
+
+  const handleDeleteConfirmed = async (name: string) => {
+    try {
+      await tornadoAdapter.remove(name);
+      setOpenList((prev) => (prev ? prev.filter((s) => s.name !== name) : prev));
+      if (name === currentSheetName) setCurrentSheetName(null);
+      notify(`Deleted "${name}"`);
+    } catch (err) {
+      handleStorageError(err, "Delete");
+    }
   };
 
   // Dark mode effect
@@ -585,6 +727,28 @@ const App: React.FC = () => {
               </IonButtons>
             </IonToolbar>
 
+        {/* Backend storage bar */}
+        {storageEnabled && (
+          <IonToolbar color="light">
+            <div className="storage-toolbar" data-testid="storage-toolbar">
+              <span className="storage-sheet-name" data-testid="current-sheet-name">
+                {currentSheetName ?? "Unsaved sheet"}
+              </span>
+              <button className="pill-btn primary" data-testid="btn-open" onClick={handleOpenClick}>Open</button>
+              <button className="pill-btn primary" data-testid="btn-save" onClick={handleSave}>Save</button>
+              <button className="pill-btn primary" data-testid="btn-save-as" onClick={() => setSaveAsOpen(true)}>Save As</button>
+              {loggedIn ? (
+                <button className="pill-btn secondary" data-testid="btn-logout" onClick={handleLogout}>Logout</button>
+              ) : (
+                <button className="pill-btn secondary" data-testid="btn-login" onClick={() => setShowLoginModal(true)}>Login</button>
+              )}
+              <span className="storage-user" data-testid="storage-user">
+                {loggedIn ? (userEmail ? `Logged in: ${userEmail}` : "Logged in") : "Not logged in"}
+              </span>
+            </div>
+          </IonToolbar>
+        )}
+
         {/* Secondary Sheet Navigation & Controls Bar */}
         <IonToolbar color="light">
           <div className="sub-toolbar-container">
@@ -757,9 +921,53 @@ const App: React.FC = () => {
           isOpen={showToast}
           onDidDismiss={() => setShowToast(false)}
           message={toastMsg}
-          duration={2000}
+          duration={toastDuration}
           position="bottom"
         />
+
+        {storageEnabled && (
+          <>
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onSubmit={handleLogin} />
+            <OpenModal
+              isOpen={showOpenModal}
+              onClose={() => setShowOpenModal(false)}
+              sheets={openList}
+              currentName={currentSheetName}
+              onOpen={handleOpenSheet}
+              onDelete={(name) => setDeleteName(name)}
+            />
+            <IonAlert
+              isOpen={saveAsOpen}
+              header="Save As"
+              inputs={saveAsInputs}
+              buttons={[
+                { text: "Cancel", role: "cancel" },
+                { text: "Save", role: "confirm", handler: (v: any) => { void handleSaveAsName(v?.name ?? ""); } },
+              ]}
+              onDidDismiss={() => setSaveAsOpen(false)}
+            />
+            <IonAlert
+              isOpen={overwriteName !== null}
+              header="Overwrite?"
+              message={`"${overwriteName}" already exists. Overwrite it?`}
+              buttons={[
+                { text: "Cancel", role: "cancel" },
+                { text: "Overwrite", role: "confirm", handler: () => { if (overwriteName) void doSave(overwriteName); } },
+              ]}
+              onDidDismiss={() => setOverwriteName(null)}
+            />
+            <IonAlert
+              isOpen={deleteName !== null}
+              header="Delete sheet?"
+              message={`Delete "${deleteName}" from the server? This cannot be undone.`}
+              buttons={[
+                { text: "Cancel", role: "cancel" },
+                { text: "Delete", role: "confirm", handler: () => { if (deleteName) void handleDeleteConfirmed(deleteName); } },
+              ]}
+              onDidDismiss={() => setDeleteName(null)}
+            />
+          </>
+        )}
 
         {/* Color Picker Modal */}
         <IonModal isOpen={showColorModal} onDidDismiss={() => setShowColorModal(false)}>
