@@ -114,7 +114,7 @@ When implementing a new plugin or feature in `./socialcalc`:
    - Keep styling in a sibling `.css` file using scoped class names (e.g. `.sc-*`).
 
 5. **Synchronize Documentation**:
-   Whenever you edit or improve anything in `./socialcalc` (new plugins, updated props, bug fixes, new APIs), you MUST update both `socialcalc/README.md` and `docs/src/docsData.ts` to keep the package docs and standalone documentation website in sync.
+   Whenever you edit or improve anything in `./socialcalc` (new plugins, updated props, bug fixes, new APIs), you MUST update both `socialcalc/README.md` and `docs-site/src/docsData.ts` to keep the package docs and standalone documentation website in sync.
 
 ---
 
@@ -146,5 +146,5 @@ Before completing your turn:
 2. `npm run build` succeeds without TypeScript or Vite errors.
 3. `node test-socialcalc.js` passes with all checkmarks green.
 4. `src/socialcalc` does not exist (`ls src/socialcalc` should fail).
-5. Documentation updated: both `socialcalc/README.md` and `docs/src/docsData.ts` reflect all new or modified features.
+5. Documentation updated: both `socialcalc/README.md` and `docs-site/src/docsData.ts` reflect all new or modified features.
 

@@ -1648,7 +1648,19 @@
     // first create a new workbook
     var control = SocialCalc.GetCurrentWorkBookControl();
 
+    // CreateNewBook keeps the active sheet; make that the first tab so the loaded file's first
+    // sheet lands in the first sheet id (normally "sheet1") rather than whichever tab was open
+    var firstButtonId = Object.keys(control.sheetButtonArr)[0];
+    if (firstButtonId && control.currentSheetButton && control.currentSheetButton.id !== firstButtonId) {
+      SocialCalc.WorkBookControlActivateSheet(firstButtonId);
+    }
+
     SocialCalc.WorkBookControlCreateNewBook();
+
+    // Restart the id counter from the one remaining sheet, so reloading does not mint new ids
+    // (sheet5, sheet6...) every time; saved ids are reused below where possible
+    var remainingNum = parseInt(String(control.currentSheetButton.id).substring(5), 10);
+    control.sheetCnt = isNaN(remainingNum) ? control.numSheets : remainingNum;
 
     // at this point there is one sheet, and 1 button
     // create the sequence of buttons, and sheets
@@ -1688,8 +1700,15 @@
         // need to also set the formula cache
         currentsheetid = sheetid;
       } else {
-        sheetid = "sheet" + (control.sheetCnt + 1).toString();
-        control.sheetCnt = control.sheetCnt + 1;
+        // Keep the saved sheet id when it is free, so data keyed by sheet id (app mappings,
+        // editable cells, footers) still matches after a reload
+        if (/^sheet\d+$/.test(sheet) && !control.sheetButtonArr[sheet] && !control.workbook.sheetArr[sheet]) {
+          sheetid = sheet;
+        } else {
+          sheetid = "sheet" + (control.sheetCnt + 1).toString();
+        }
+        var sheetNum = parseInt(sheetid.substring(5), 10);
+        if (sheetNum > control.sheetCnt) control.sheetCnt = sheetNum;
         SocialCalc.WorkBookControlAddSheetButton(
           sheetsave.sheetArr[sheet].name,
           sheetid
@@ -1732,7 +1751,13 @@
         SocialCalc.EditableCells.allow = false;
       }
     }
+    // Open the saved current sheet shortly after loading, unless the app (or user) has already
+    // switched sheets in the meantime: apps often load and then pick a tab right away, and this
+    // delayed activation used to undo that choice 200 ms later
+    var sheetAtLoad = control.currentSheetButton ? control.currentSheetButton.id : null;
     var timeoutFn = function () {
+      var now = control.currentSheetButton ? control.currentSheetButton.id : null;
+      if (now !== sheetAtLoad) return;
       SocialCalc.WorkBookControlActivateSheet(currentsheetid);
     };
     window.setTimeout(timeoutFn, 200);
@@ -2677,8 +2702,20 @@
     return true;
   };
 
-  // this is for checkmark toggling
+  // Checkbox cells: cells with a "tc" constraint (e.g. "Paid by: Cash") toggle a checkmark on tap.
+  // checkedHTML is the markup the bundled templates use; hosts can point it at their own image.
+  SocialCalc.ToggleCellSettings = SocialCalc.ToggleCellSettings || {
+    checkedHTML: '<div><img src="checkmark.png"></div>',
+    uncheckedHTML: "<div>&nbsp;</div>",
+    // A tap reaches ToggleCell twice on touch screens: from the browser's mouse-down and from the
+    // synthetic one core/touch.js dispatches (~400ms later). Repeats on the same cell inside these
+    // windows are ignored, so one tap toggles once.
+    syntheticRepeatMs: 1000,
+    repeatMs: 300,
+  };
+
   SocialCalc.Callbacks.ToggleCell = function (cellname) {
+    var settings = SocialCalc.ToggleCellSettings;
     var control = SocialCalc.GetCurrentWorkBookControl();
     if (!control || !control.currentSheetButton || !control.workbook || !control.workbook.sheetArr) {
       return;
@@ -2687,43 +2724,38 @@
     if (!control.workbook.sheetArr[sheetid]) return;
     var sheetobj = control.workbook.sheetArr[sheetid].sheet;
     if (!sheetobj || !sheetobj.cells) return;
-    var cell = sheetobj.cells[cellname];
-    var sheetname = sheetobj.sheetname;
+    var editor = control.workbook.spreadsheet && control.workbook.spreadsheet.editor;
+    if (!editor) return;
 
-    // check if cell is in constraints
-    //console.log(sheetname);
-    //console.log(cellname);
-
-    var constraint =
-      SocialCalc.EditableCells.constraints[sheetname + "!" + cellname];
+    var constraints = SocialCalc.EditableCells && SocialCalc.EditableCells.constraints;
+    var constraint = constraints && constraints[sheetobj.sheetname + "!" + cellname];
     if (!constraint || constraint[0] != "tc") {
       return;
     }
 
-    var cellinner = document.getElementById("cell_" + cellname);
-
-    if (cellinner.innerHTML.indexOf("&nbsp;") != -1) {
-      // set the value to the img value
-      cellinner.innerHTML =
-        '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-      if (cell) {
-        //cell.displaystring = '<div><img src="http://img689.imageshack.us/img689/9234/checkmark.png"></img></div>'    ;
-        //cell.datavalue = '<div><img src="http://img689.imageshack.us/img689/9234/checkmark.png"></img></div>'   ;
-        //console.log("found cell")
-        cell.displaystring =
-          '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-        cell.datavalue =
-          '<div><img src="http://imageshack.com/a/img924/3599/c5fBZx.png" height="15" width="15"></img></div>';
-        //http://img689.imageshack.us/img689/9234/checkmark.png
-      }
-    } else {
-      // set the value to a space
-      cellinner.innerHTML = "<div>&nbsp;</div>";
-      if (cell) {
-        cell.datavalue = "<div>&nbsp;</div>";
-        cell.displaystring = "<div>&nbsp;</div>";
-      }
+    var key = sheetid + "!" + cellname;
+    var now = Date.now();
+    var event = typeof window !== "undefined" ? window.event : null;
+    var synthetic = !!event && event.isTrusted === false;
+    var last = SocialCalc.ToggleCellLast;
+    if (last && last.key == key && now - last.at < (synthetic ? settings.syntheticRepeatMs : settings.repeatMs)) {
+      return;
     }
+    SocialCalc.ToggleCellLast = { key: key, at: now };
+
+    var cell = sheetobj.cells[cellname];
+    var current = cell ? String(cell.datavalue || "") : "";
+    var isTicked = /<img/i.test(current);
+    var next = isTicked ? settings.uncheckedHTML : settings.checkedHTML;
+
+    // A sheet command (not a direct cell write) re-renders the cell, records undo and lets
+    // hosts see the change, like any other edit.
+    editor.EditorScheduleSheetCommands(
+      "set " + cellname + " text th " + SocialCalc.encodeForSave(next) + "\n" +
+        "set " + cellname + " textvalueformat text-html",
+      true,
+      false
+    );
   };
 
   SocialCalc.WorkbookControlCreateSheetHTML = function (sheetlist) {

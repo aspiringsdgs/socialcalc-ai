@@ -1,7 +1,8 @@
 // User prompt and input functions
 import { showFormattingButtons } from "./utils.js";
 
-import { SocialCalcRef, buildSetValueCommands } from "./runtime.js";
+import { SocialCalcRef, getCellEditText } from "./runtime.js";
+import { commitCellEdit } from "./listeners.js";
 
 // Live reference to the global SocialCalc object (never a stale import-time copy)
 let SocialCalc = SocialCalcRef;
@@ -47,22 +48,10 @@ export function enhancedShowPrompt(coord) {
   var highlights = editor.context.highlights;
 
   var wval = editor.workingvalues;
-  if (wval.eccord) {
-    wval.ecoord = null;
-    console.log("return due to ecoord");
-    return;
-  }
-  wval.ecoord = coord;
   if (!coord) coord = editor.ecell.coord;
-  var text = SocialCalc.GetCellContents(editor.context.sheetobj, coord);
-  console.log("in enhanced prompt, coord = " + coord + " text=" + text);
-
-  if (
-    SocialCalc.Constants.SCNoQuoteInInputBox &&
-    text.substring(0, 1) === "'"
-  ) {
-    text = text.substring(1);
-  }
+  wval.ecoord = coord;
+  // Raw editable text: "=formula", a constant's typed text ("$1,200"), or the plain value
+  var text = getCellEditText(editor.context.sheetobj, coord);
 
   var cell = SocialCalc.GetEditorCellElement(
     editor,
@@ -72,57 +61,20 @@ export function enhancedShowPrompt(coord) {
 
   var okfn = function (val) {
     if (val === null || val === undefined) return;
-
-    var callbackfn = function () {
-      console.log("callback val " + val);
-
-      // Create command to set cell text/value (encoded, so ":", "\" and newlines survive)
-      var cellRef = editor.ecell.coord;
-      var cmd = buildSetValueCommands(cellRef, typeof val === "number" ? val : val.toString()).join("\n");
-
-      if (editor.context && editor.context.sheetobj) {
-        // Use ExecuteWorkBookControlCommand if available to handle undo/redo properly
-        if (control && control.ExecuteWorkBookControlCommand) {
-          var commandObj = {
-            cmdtype: "scmd",
-            id: control.currentSheetButton ? control.currentSheetButton.id : "sheet1",
-            cmdstr: cmd,
-            saveundo: true
-          };
-          control.ExecuteWorkBookControlCommand(commandObj, false);
-        } else {
-          // Fallback to simpler execution if control is not fully available (unlikely)
-          editor.EditorScheduleSheetCommands(cmd, true, false);
-        }
-      }
-    };
-    // Execute callback synchronously to avoid race conditions with formatting application
-    const safeCallbackfn = function () {
-      try {
-        callbackfn();
-      } catch (e) {
-        console.error("Error in cell edit callback:", e);
-      }
-    };
-    safeCallbackfn();
+    try {
+      // Write to the cell this prompt was opened for (the cursor may have moved since), through
+      // the before-commit hooks and the engine's command queue
+      return commitCellEdit(coord, typeof val === "number" ? val : val.toString());
+    } catch (e) {
+      console.error("Error in cell edit callback:", e);
+      return false;
+    }
   };
 
   // highlight the cell
   delete highlights[editor.ecell.coord];
   highlights[editor.ecell.coord] = "cursor";
   editor.UpdateCellCSS(cell, editor.ecell.row, editor.ecell.col);
-
-  var celltext = "Enter Value";
-  var title = "Input";
-  if (constraint) {
-  } else {
-    console.log("cell text is null");
-  }
-
-  var options = { title: title };
-  options["message"] = celltext;
-  console.log("text is " + text);
-  options["textvalue"] = text;
 
   // Dispatch custom event for React modal to handle
   const cellEditEvent = new CustomEvent('socialcalc:cell-edit-request', {

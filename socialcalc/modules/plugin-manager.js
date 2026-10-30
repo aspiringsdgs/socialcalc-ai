@@ -19,6 +19,9 @@ const _enabledPlugins = new Set();
 // Event listeners for state changes
 const _listeners = new Set();
 
+// Last state reported to listeners, so each real change is announced exactly once
+const _lastKnownState = new Map();
+
 /**
  * Get active SocialCalc editor instance
  */
@@ -26,14 +29,16 @@ export function getActiveEditor() {
   if (typeof window !== "undefined" && window.SocialCalc) {
     SocialCalc = window.SocialCalc;
   }
-  if (SocialCalc && SocialCalc._activeEditor) {
-    return SocialCalc._activeEditor;
-  }
+  // The live workbook's editor first: _activeEditor is only refreshed by initializeApp(),
+  // so it goes stale when a workbook is created any other way
   if (SocialCalc && SocialCalc.GetCurrentWorkBookControl) {
     const ctrl = SocialCalc.GetCurrentWorkBookControl();
     if (ctrl && ctrl.workbook && ctrl.workbook.spreadsheet && ctrl.workbook.spreadsheet.editor) {
       return ctrl.workbook.spreadsheet.editor;
     }
+  }
+  if (SocialCalc && SocialCalc._activeEditor) {
+    return SocialCalc._activeEditor;
   }
   const touchinfo = SocialCalc?.TouchInfo;
   if (touchinfo && touchinfo.registeredElements) {
@@ -80,6 +85,26 @@ export function registerPlugin(name, pluginDefinition) {
     metadata: pluginDefinition.metadata || {},
     ...pluginDefinition
   });
+  try {
+    _lastKnownState.set(name, isPluginEnabled(name));
+  } catch (e) {
+    // state unknown until the first change
+  }
+}
+
+/**
+ * Announce a plugin's current state to subscribePluginChanges listeners and as a
+ * `socialcalc:plugin-change` window event, if it changed since the last announcement.
+ * Plugin modules call this from their own enable/disable/toggle functions, so UI bound to
+ * plugin state stays in sync whether the plugin was switched through the manager or directly
+ * (e.g. enableGridLines()).
+ * @param {string} name
+ */
+export function notifyPluginStateChange(name) {
+  const enabled = isPluginEnabled(name);
+  if (_lastKnownState.get(name) === enabled) return;
+  _lastKnownState.set(name, enabled);
+  notifyListeners(name, enabled);
 }
 
 /**
@@ -96,7 +121,7 @@ export function enablePlugin(name, options) {
   try {
     plugin.enable(options);
     _enabledPlugins.add(name);
-    notifyListeners(name, true);
+    notifyPluginStateChange(name);
     return true;
   } catch (err) {
     console.error(`[PluginManager] Failed to enable plugin "${name}":`, err);
@@ -117,7 +142,7 @@ export function disablePlugin(name) {
   try {
     plugin.disable();
     _enabledPlugins.delete(name);
-    notifyListeners(name, false);
+    notifyPluginStateChange(name);
     return true;
   } catch (err) {
     console.error(`[PluginManager] Failed to disable plugin "${name}":`, err);

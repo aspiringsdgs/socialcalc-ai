@@ -8,10 +8,12 @@ export default defineConfig({
     react(),
   ],
   resolve: {
-    alias: {
-      socialcalc: path.resolve(__dirname, "./socialcalc"),
-      "socialcalc-ai": path.resolve(__dirname, "./socialcalc"),
-    },
+    // Point at the library's source entries, not the folder: the folder's package.json
+    // resolves to the published dist/ build, which is only refreshed by `npm run build`.
+    alias: [
+      { find: /^socialcalc(-ai)?$/, replacement: path.resolve(__dirname, "./socialcalc/index.js") },
+      { find: /^socialcalc(-ai)?\/(.*)$/, replacement: path.resolve(__dirname, "./socialcalc") + "/$2" },
+    ],
   },
   server: {
     proxy: {

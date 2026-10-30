@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
-import { bootEngine } from "../../../src/test/engine";
+import { bootEngine } from "../helpers/engine";
 
 // jsdom has no canvas: fake the two rendering libraries and record what the PDF receives
 const pdfCalls: any[] = [];
@@ -34,10 +34,10 @@ vi.mock("jspdf", () => ({
 }));
 vi.mock("html2canvas", () => ({ default: async () => ({ width: 1000, height: 3000 }) }));
 
-let exporters: typeof import("../exporters.js");
-let pdf: typeof import("../pdf-export.js");
-let share: typeof import("../share.js");
-let pluginManager: typeof import("../plugin-manager.js");
+let exporters: typeof import("../../modules/exporters.js");
+let pdf: typeof import("../../modules/pdf-export.js");
+let share: typeof import("../../modules/share.js");
+let pluginManager: typeof import("../../modules/plugin-manager.js");
 const downloads: string[] = [];
 
 // jsdom Blobs have no .text()
@@ -58,10 +58,10 @@ beforeAll(async () => {
     downloads.push(this.download);
   });
 
-  exporters = await import("../exporters.js");
-  pdf = await import("../pdf-export.js");
-  share = await import("../share.js");
-  pluginManager = await import("../plugin-manager.js");
+  exporters = await import("../../modules/exporters.js");
+  pdf = await import("../../modules/pdf-export.js");
+  share = await import("../../modules/share.js");
+  pluginManager = await import("../../modules/plugin-manager.js");
 }, 20000);
 
 beforeEach(() => {

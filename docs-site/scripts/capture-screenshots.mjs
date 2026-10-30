@@ -1,7 +1,7 @@
 // Captures the docs screenshots in public/screenshots/live/ from the showcase app (../src).
 //
 // 1. Start the showcase app from the repo root:   npm run dev      (serves http://localhost:5173)
-// 2. From docs/:  npm run screenshots            (or: npm run screenshots -- agent   for one shot)
+// 2. From docs-site/:  npm run screenshots            (or: npm run screenshots -- agent   for one shot)
 //
 // Set SHOWCASE_URL to use another address, and CHROMIUM_PATH to reuse an installed browser
 // instead of running `npx playwright install chromium`.

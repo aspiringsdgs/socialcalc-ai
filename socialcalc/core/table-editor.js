@@ -1269,7 +1269,13 @@
                 if (sheetobj.celldisplayneeded && !sheetobj.renderneeded) {
                     cr = SocialCalc.coordToCr(sheetobj.celldisplayneeded);
                     cell = SocialCalc.GetEditorCellElement(editor, cr.row, cr.col);
-                    editor.ReplaceCell(cell, cr.row, cr.col);
+                    if (cell) {
+                        editor.ReplaceCell(cell, cr.row, cr.col);
+                    } else {
+                        // Cell not in the rendered table (scrolled away, or the table is behind a
+                        // pending scroll): re-render rather than patching a cell that is not there
+                        sheetobj.renderneeded = true;
+                    }
                 }
 
                 if (editor.deferredCommands.length) {
@@ -1332,6 +1338,12 @@
                     signalstatus(status);
                     dcmd = editor.deferredCommands.shift();
                     editor.EditorScheduleSheetCommands(dcmd.cmdstr, dcmd.saveundo, true);
+                } else if (SocialCalc.SheetCommandInfo && SocialCalc.SheetCommandInfo.timerobj) {
+                    // This render overlapped a command that has not executed yet (it was started
+                    // by a "cmdend" while the render was in flight). Stay busy: that command's
+                    // cmdend schedules another render/position pass, which then clears busy.
+                    // Clearing it now would let the next command overwrite the pending one.
+                    signalstatus(status);
                 } else {
                     editor.busy = false;
                     signalstatus(status);
@@ -2858,10 +2870,15 @@
                                 // don't count col-spanned cells
                                 colindex++;
                         }
+                        // The rendered table can lag behind the panes (a scroll render is still
+                        // pending); report "not visible" then instead of returning an element that
+                        // does not exist, which made callers throw in the middle of a command
+                        var tbody = editor.griddiv && editor.griddiv.firstChild && editor.griddiv.firstChild.lastChild;
+                        var rowElement = tbody && tbody.childNodes[rowindex];
+                        var cellElement = rowElement && rowElement.childNodes[colindex];
+                        if (!cellElement) return null;
                         return {
-                            element:
-                                editor.griddiv.firstChild.lastChild.childNodes[rowindex]
-                                    .childNodes[colindex],
+                            element: cellElement,
                             rowpane: rowpane,
                             colpane: colpane,
                         };
@@ -3627,7 +3644,11 @@
 
         SocialCalc.EditorSheetStatusCallback(null, "doneposcalc", null, editor);
 
-        if (editor.ensureecell && editor.ecell && !editor.deferredCommands.length) {
+        // "doneposcalc" may have just taken a deferred command off the queue and started it, which
+        // leaves the queue empty but the editor busy. Scrolling now would start a render whose own
+        // "doneposcalc" clears editor.busy while that command is still pending, so the next command
+        // would overwrite it. Wait until the editor is really idle; ensureecell stays set until then.
+        if (editor.ensureecell && editor.ecell && !editor.deferredCommands.length && !editor.busy) {
             // don't do if deferred cmd to execute
             editor.ensureecell = false;
             editor.EnsureECellVisible(); // this could cause another redisplay

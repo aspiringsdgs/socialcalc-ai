@@ -9,6 +9,14 @@
 
 Derived from Dan Bricklin's proven, industrial-strength **SocialCalc** engine, `socialcalc-ai` has been re-architected for modern web, mobile, and AI-driven applications. It replaces legacy global variables with clean ES modules, provides full TypeScript definitions, adds smooth mobile touch physics, and includes a full suite of modern React/Ionic UI controls.
 
+| | |
+| :--- | :--- |
+| **npm** | [`socialcalc-ai`](https://www.npmjs.com/package/socialcalc-ai) |
+| **GitHub Packages** | [`@aspiringsdgs/socialcalc-ai`](https://github.com/aspiringsdgs/socialcalc-ai/pkgs/npm/socialcalc-ai) |
+| **Source** | [aspiringsdgs/socialcalc-ai](https://github.com/aspiringsdgs/socialcalc-ai/tree/main/socialcalc) |
+| **MCP server** | [`socialcalc-mcp`](https://www.npmjs.com/package/socialcalc-mcp) lets AI assistants edit these workbooks ([source](https://github.com/aspiringsdgs/socialcalc-mcp)) |
+| **Issues** | [github.com/aspiringsdgs/socialcalc-ai/issues](https://github.com/aspiringsdgs/socialcalc-ai/issues) |
+
 ---
 
 ## 📑 Table of Contents
@@ -83,15 +91,30 @@ yarn add socialcalc-ai
 pnpm add socialcalc-ai
 ```
 
-### Peer Dependencies
+### Entry Points & Peer Dependencies
 
-If you plan to use the pre-built React / Ionic components (`CellEditModal`, `HorizontalScrollBar`, etc.), ensure the peer dependencies are installed:
+The package ships compiled ES modules, so it works in Vite, webpack, Create React App and Next.js without extra transpile settings. Pick the entry that matches your app:
+
+| Import from | Contains | Needs |
+| :--- | :--- | :--- |
+| `socialcalc-ai/react` | Engine, all plugins, `CellEditModal`, `HorizontalScrollBar`, `RowActionPopover` | `react`, `react-dom` |
+| `socialcalc-ai/ionic` | `EditableCellsModal`, `DemoVideosModal`, `AgentModal`, `AgentPluginTest` | `@ionic/react`, `ionicons` |
+| `socialcalc-ai` | Everything above (unchanged, for existing apps) | `react`, `react-dom`, `@ionic/react`, `ionicons` |
 
 ```bash
-npm install react react-dom @ionic/react ionicons
+# Any React app
+npm install socialcalc-ai react react-dom
+
+# Ionic apps (or when using the Ionic-based components / the root entry)
+npm install socialcalc-ai react react-dom @ionic/react ionicons
 ```
 
-*(Note: Peer dependencies are optional if you only consume the core calculation engine in headless Node.js or Vanilla JS environments).*
+```ts
+// Plain React app (no Ionic installed)
+import { initializeApp, CellEditModal, setupCellChangeListener } from "socialcalc-ai/react";
+```
+
+*(Note: React is optional if you only consume the core calculation engine in headless Node.js or Vanilla JS environments.)*
 
 ---
 
@@ -308,6 +331,23 @@ A modern, responsive bottom-sheet modal that replaces legacy browser `prompt()` 
 />
 ```
 
+**Committing edits.** Apply goes through `commitCellEdit(coord, value, formatting?)`, which you can also call from your own editor UI:
+- runs every hook registered with `addBeforeCellCommitHook` first; a hook returning `false` rejects the value and the modal stays open,
+- stores typed values the way the built-in editor does (`"$1,200"`, `"12%"`, `"1/2/2026"` become numbers with the matching format),
+- writes value and formatting as one undo step, queued behind any running recalculation,
+- only rewrites the value when it was actually edited (pass `undefined` to change formatting only).
+
+```ts
+const removeHook = AppGeneral.addBeforeCellCommitHook((coord, value) => {
+  if (coord.startsWith("D") && isNaN(parseFloat(value))) return false; // amounts only
+});
+
+AppGeneral.commitCellEdit("D5", "$250");                         // 250, currency
+AppGeneral.commitCellEdit("D5", undefined, { bgColor: "lightyellow" }); // formatting only
+```
+
+`updateCellValueAndFormat(coord, value, formatting, { detectTypes })` stays available for programmatic writes; it skips the hooks and stores text as-is unless `detectTypes: true`.
+
 ### 2. `HorizontalScrollBar`
 A smooth horizontal track controller designed specifically for wide spreadsheets on mobile and desktop:
 - Step-by-step column advancement buttons (◀ / ▶).
@@ -522,9 +562,12 @@ AppGeneral.disableRowColHeaders();
 // Toggle headers dynamically (returns boolean)
 const isEnabled = AppGeneral.toggleRowColHeaders();
 
-// Execute raw SocialCalc commands
-AppGeneral.executeSheetCommand("set A1 text hello");
+// Execute raw SocialCalc commands (asynchronous, one undo step each; formulas recalculate
+// and "command" / "cell-change" events fire, so hosts can autosave)
+AppGeneral.executeSheetCommand("set A1 text t hello");
 ```
+
+`insertRowAbove`, `insertRowBelow`, `deleteRowAt` and `setColumnWidth` use the same path, so each can be undone on its own.
 
 ### 2. Grid Lines (`modules/grid-lines.js`)
 Adds subtle, high-contrast borders between cells:
@@ -579,6 +622,12 @@ const canEdit = AppGeneral.isCellEditable(editor, "B3"); // true
 const isLocked = AppGeneral.isCellEditable(editor, "A1"); // false
 ```
 
+**Checkbox cells.** A cell with a `"tc"` constraint in the workbook's `EditableCells.constraints` (for example `"sheet1!H10": ["tc"]` for "Paid by: Cash") toggles a checkmark when tapped. The change is a normal sheet command, so it re-renders, can be undone and reaches your change listeners. One tap toggles once, even on touch screens where the browser and the engine both send a mouse-down. The checkmark is `<img src="checkmark.png">`, the same markup the bundled templates use, so ship a `checkmark.png` next to your `index.html` or point it at your own image:
+
+```ts
+SocialCalc.ToggleCellSettings.checkedHTML = '<div><img src="/assets/tick.svg" width="15" height="15"></div>';
+```
+
 ### 6. Plugin Manager (`modules/plugin-manager.js`)
 Allows registration of custom lifecycle plugins:
 ```ts
@@ -591,6 +640,17 @@ AppGeneral.registerPlugin("myCustomPlugin", {
   disable: () => console.log("Plugin deactivated"),
   isEnabled: () => true
 });
+```
+
+Keep UI in sync with plugin state. Listeners are called once per real change, whether the plugin was switched through the manager (`enablePlugin("gridLines")`) or directly (`enableGridLines()`):
+
+```ts
+const unsubscribe = AppGeneral.subscribePluginChanges((name, enabled) => {
+  setPluginState((prev) => ({ ...prev, [name]: enabled }));
+});
+
+// In your own plugin, announce changes made by its enable/disable functions:
+AppGeneral.notifyPluginStateChange("myCustomPlugin");
 ```
 
 ### 7. History (Undo / Redo) (`modules/history.js`)
@@ -714,7 +774,7 @@ SocialCalc provides built-in formatters for commercial, financial, and date/time
 - **Date & Time Formats**: ISO timestamps, short date (`MM/DD/YYYY`), medium date (`DD-MMM-YYYY`), and 12/24-hour clocks.
 
 ### 12. Offline PDF Export Plugin (`socialcalc-ai/pdf-export`)
-Generates PDFs of one sheet or the whole workbook on the device, with no server involved, so it works offline and inside Capacitor apps. Pages are split on row boundaries, chart canvases in the live editor are included, and every page gets a timestamp header, a footer label and `Page X of Y`.
+Generates PDFs of one sheet or the whole workbook on the device, with no server involved, so it works offline and inside Capacitor apps. Pages are split on row boundaries (empty rows at the end of a sheet never get a page of their own), chart canvases in the live editor are included, and every page gets a timestamp header, a footer label and `Page X of Y`.
 
 The plugin is opt-in: it is not part of the main `socialcalc-ai` entry, so apps that do not import it do not need its dependencies. To use it, install the optional peer dependencies:
 
@@ -819,11 +879,11 @@ Every call resolves to `{ method, platform }` (e.g. `{ method: "email-composer",
 
 | Event Name | `event.detail` Structure | Purpose |
 | :--- | :--- | :--- |
-| `socialcalc:cell-edit-request` | `{ coord: string, text: string, okfn: Function, cleanup: Function }` | Fired when a cell is clicked/tapped. Consumed by `CellEditModal`. |
-| `socialcalc:row-header-click` | `{ rowNum: number, originalEvent: MouseEvent }` | Fired when a row number index is clicked. Consumed by `RowActionPopover`. |
-| `socialcalc:cell-change` | `{ coord: string, value: string }` | Fired after a cell's value or formula is committed and recalculated. |
-| `socialcalc:horizontal-scroll`| `{ currentFirstCol: number, currentColName: string, totalCols: number }` | Fired whenever the horizontal viewport column changes. |
-| `socialcalc:plugin-change` | `{ pluginName: string, state: boolean, allStates: Record<string, boolean> }` | Fired whenever a plugin is registered, enabled, or disabled. |
+| `socialcalc:cell-edit-request` | `{ coord: string, text: string, okfn: (value) => boolean, cleanup: Function }` | Fired when a cell is clicked/tapped. `text` is the editable text (`"=SUM(A1:A3)"`, `"$1,200"`). Consumed by `CellEditModal`. |
+| `socialcalc:row-header-click` | `{ rowNum: number, clientX: number, clientY: number }` | Fired when a row number is clicked/tapped (row/column headers enabled). Consumed by `RowActionPopover`. |
+| `socialcalc:cell-change` | `{ coord, value, range, kind, sheetId, cmdstr, changes, source }` | Fired after a command that changes cells has run, from any source: the modal, the built-in editor, undo/redo, paste, row inserts, the API. |
+| `socialcalc:horizontal-scroll`| `{ currentFirstCol: number, currentColName: string, totalCols: number }` | Fired whenever the first visible column changes, including keyboard navigation and selection moves. |
+| `socialcalc:plugin-change` | `{ plugin: string, enabled: boolean }` | Fired once per plugin state change, whether switched through the plugin manager or directly. |
 | `socialcalc:agent-action` | `{ actions: Array, commands: string[], results: Array, timestamp: number }` | Fired whenever the AI Agent executes actions on the spreadsheet. |
 
 ### Event Listener Example:
@@ -883,12 +943,29 @@ import {
 ## 💻 Browser & Framework Compatibility
 
 - **Browsers**: Chrome, Edge, Safari, Firefox (Desktop & Mobile).
-- **Frameworks**: React 18+, Ionic React 7+, Next.js (Client Component), Vite, Plain JavaScript.
+- **Frameworks**: React 18+, Ionic React 7+, Next.js (Client Component), Vite, webpack 5, Create React App, Plain JavaScript. Apps without Ionic import from `socialcalc-ai/react`.
 - **Runtimes**: Node.js 18+ (for headless calculation & CSV/MSC transformation).
 
 ---
 
 ## 📦 Release Notes
+
+### v1.1.2
+- **Checkbox cells** (`"tc"` constraints, e.g. "Paid by: Check / Cash / Money Order") showed a broken image when ticked, because `ToggleCell` used a dead imageshack.com URL. It now uses `checkmark.png` (configurable with `SocialCalc.ToggleCellSettings.checkedHTML`), changes the cell with a sheet command (re-render, undo, change events) and toggles once per tap on touch screens instead of ticking and unticking.
+- **PDF export**: empty rows at the end of a sheet no longer produce a blank page in "Export All as PDF".
+
+### v1.1.0
+- **Works in any React app**: the package now ships compiled JavaScript (`dist/`), so webpack, Create React App and Next.js no longer fail on `.tsx` files. New `socialcalc-ai/react` entry without Ionic; Ionic-based components are also available from `socialcalc-ai/ionic`. The root entry is unchanged.
+- **Taps on cells reading like column letters** (e.g. `Er`, `OK`, `x`) or whole numbers opened column/row selection instead of the cell editor on touch devices; header detection now only applies to real header cells while headers are shown. A sideways swipe is no longer treated as a tap.
+- **Edit modal**: shows a constant's typed text (`$1,200` instead of `=$1,200`, which broke the cell on Apply); no longer creates empty cells on click; runs `addBeforeCellCommitHook` hooks; stores typed currency/percent/dates as numbers; does not rewrite unchanged values. New `commitCellEdit()`.
+- **Native editing** (modal disabled): Enter/Tab/Escape reach the engine while its input box has focus; clicking a cell while typing a formula inserts the reference instead of discarding the formula; the grid takes keyboard focus on click.
+- **Row/column commands** (`insertRowAbove/Below`, `deleteRowAt`, `setColumnWidth`, `executeSheetCommand`) are separate undo steps, recalculate formulas and emit events. Previously they merged into the previous edit's undo step and left totals stale. Mouse column resizing no longer throws.
+- **No more lost edits under load**: `updateCellValueAndFormat`, prompts, invoice/logo/weight writers wait for a running recalculation instead of overwriting the command in progress. Invoice text with newlines or `\` is encoded.
+- **React sync**: `subscribePluginChanges` / `socialcalc:plugin-change` fire for direct calls like `enableGridLines()` (new `notifyPluginStateChange()`); `HorizontalScrollBar` follows keyboard/selection scrolling and no longer re-subscribes on every render.
+- **Engine stability**: edits made right after scrolling could be silently lost (a render cleared the editor's busy flag while a command was still pending), and a command finishing while the grid was still catching up with a scroll could throw and leave the sheet frozen (every later edit queued forever). Both are fixed in the core.
+- **Reloading workbooks** keeps sheet ids (`sheet1`…`sheet4` stay the same instead of becoming `sheet5`, `sheet6`…), also when a file is loaded while another tab is open, so app mappings and editable-cell locks keyed by sheet id keep working. A tab the app opens right after loading is no longer switched back to the file's saved sheet 200 ms later.
+- **Row/column selection** (`selectRow`, `selectColumn`, header taps) now highlights the row or column; it was blocked by the engine's `SCNoRanging` setting.
+- **Other fixes**: `activateFooterButton` no longer skips switching after a workbook load; re-running `initializeApp` (React StrictMode) no longer duplicates sheet tabs; `saveAs()` resolves `null` on cancel instead of never; the formatting popup no longer leaks a document click listener; `enhancedShowPrompt` writes to the cell it was opened for.
 
 ### v1.0.8
 - **Share, Email & Print Plugin**: New opt-in `socialcalc-ai/share` entry for platform-aware (iOS / Android / web) file saving and sharing, email with attachments, and printing. Capacitor plugins are passed in with `configureShare()`.

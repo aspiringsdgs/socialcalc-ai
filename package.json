@@ -8,7 +8,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest --run"
+    "test:run": "vitest --run",
+    "test:lib": "vitest --run socialcalc",
+    "test:smoke": "vitest --run socialcalc/tests/smoke",
+    "test:modules": "vitest --run socialcalc/tests/modules",
+    "test:components": "vitest --run socialcalc/tests/components",
+    "test:regression": "vitest --run socialcalc/tests/regression"
   },
   "dependencies": {
     "@bcyesil/capacitor-plugin-printer": "^0.0.5",
@@ -36,6 +41,7 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^4.0.1",
+    "esbuild": "^0.21.5",
     "jsdom": "^22.1.0",
     "typescript": "^5.1.6",
     "vite": "^5.0.0",
