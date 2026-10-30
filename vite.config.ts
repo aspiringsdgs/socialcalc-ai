@@ -21,6 +21,11 @@ export default defineConfig({
         target: "http://127.0.0.1:5342",
         changeOrigin: true,
       },
+      // Tornado JSON Sheets API (tornado_version). Same-origin in dev, so no CORS needed.
+      "/api": {
+        target: process.env.TORNADO_PROXY_TARGET || "http://127.0.0.1:8888",
+        changeOrigin: true,
+      },
     },
   },
 
