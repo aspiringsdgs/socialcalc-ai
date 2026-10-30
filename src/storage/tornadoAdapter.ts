@@ -12,7 +12,7 @@ export interface SheetInfo {
   modified: string;
 }
 
-export type StorageErrorKind = "http" | "network" | "parse";
+export type StorageErrorKind = "http" | "network" | "parse" | "crypto";
 
 /** Failure talking to the backend. `status` is the HTTP status, or null when none was received. */
 export class StorageError extends Error {
